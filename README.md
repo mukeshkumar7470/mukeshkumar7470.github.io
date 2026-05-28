@@ -1,9 +1,28 @@
-# My Portfolio
-This is My Portfolio hosted by GitHub pages. It's completely developed in pure HTML, CSS, JS, Bootstrap. Simple to use!
-Check it on GitHub pages : [http://kumarmukeshpatel.github.io](https://mukeshkumar7470.github.io/)
+# Mukesh Kumar Patel — Portfolio
 
+Modern single-page portfolio for a Mobile App Developer (Android & Flutter), hosted on GitHub Pages.
 
----
-***Feel free to clone and modify repo as you want, but don't forget to add reference to the authors 😊***
+**Live site:** [https://mukeshkumar7470.github.io/](https://mukeshkumar7470.github.io/)
 
----
+## Stack
+
+- HTML5, CSS3 (custom properties, grid, glassmorphism)
+- Vanilla JavaScript (typed headline, scroll reveal, mobile nav)
+- [Font Awesome](https://fontawesome.com/) icons
+- [Google Fonts](https://fonts.google.com/) — Outfit & JetBrains Mono
+
+## Local preview
+
+Open `index.html` in a browser, or run a simple server:
+
+```bash
+npx serve .
+```
+
+## CV
+
+Place your resume PDF at `assets/Mukesh-Kumar-Patel-CV.pdf` for the download button to work.
+
+## Deploy
+
+Push to the `main` branch of `mukeshkumar7470.github.io` — GitHub Pages serves the site automatically.
