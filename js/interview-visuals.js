@@ -537,6 +537,156 @@
     "default-arch": "Architecture pattern",
   };
 
+  const TEACHING_OVERRIDES = {
+    mvvm: {
+      diagram: "User action\n   |\n   v\nView/Compose -> ViewModel -> UseCase/Repository -> API/Room\n   ^              |\n   |              v\n   +--------- StateFlow/LiveData",
+      analogy: "Think of MVVM like a restaurant: View is the waiter, ViewModel is the order manager, Repository is the kitchen/store room. The waiter should not cook food; the View should not contain business logic.",
+      mistakes: ["Putting API calls directly in Activity/Fragment", "Exposing MutableStateFlow to the UI", "Holding Activity context inside ViewModel"],
+      example: "class OrdersViewModel(\n    private val repo: OrdersRepository\n) : ViewModel() {\n    private val _state = MutableStateFlow<UiState>(UiState.Loading)\n    val state: StateFlow<UiState> = _state\n\n    fun loadOrders() = viewModelScope.launch {\n        _state.value = UiState.Success(repo.getOrders())\n    }\n}",
+      storyboard: ["User taps refresh", "ViewModel starts coroutine", "Repository loads cache/API", "ViewModel emits UiState", "UI re-renders"],
+    },
+    coroutine: {
+      diagram: "Main thread:  UI work only\n              |\n              | launch\n              v\nCoroutine ---- suspend ---- resumes later\n              |\n              v\nIO thread: network / Room / file",
+      analogy: "A coroutine is like ordering tea at a counter: you do not block the counter while tea is prepared. You step aside, and the counter serves others until your tea is ready.",
+      mistakes: ["Using GlobalScope for screen work", "Doing blocking calls on Dispatchers.Main", "Forgetting cancellation and error handling"],
+      example: "viewModelScope.launch {\n    _state.value = UiState.Loading\n    val result = withContext(Dispatchers.IO) {\n        repository.fetchProfile()\n    }\n    _state.value = UiState.Success(result)\n}",
+      storyboard: ["Launch in viewModelScope", "Switch to IO dispatcher", "Suspend during network wait", "Resume with result", "Update UI state on Main"],
+    },
+    hashmap: {
+      diagram: "key -> hashCode() -> bucket index\n                     |\n                     v\n            [bucket] -> equals() check -> value",
+      analogy: "HashMap is like a hotel key rack. The room number takes you close to the key, but the label confirms the exact key.",
+      mistakes: ["Overriding equals() without hashCode()", "Using mutable objects as keys", "Assuming HashMap keeps insertion order"],
+      example: "data class UserKey(val id: String)\n\nval cache = HashMap<UserKey, User>()\ncache[UserKey(\"42\")] = user\nval sameUser = cache[UserKey(\"42\")]",
+      storyboard: ["Calculate hash", "Jump to bucket", "Handle collision if present", "Use equals() to confirm key", "Return value"],
+    },
+    lifecycle: {
+      diagram: "onCreate -> onStart -> onResume\n   ^                       |\n   |                       v\nonDestroy <- onStop <- onPause",
+      analogy: "Activity lifecycle is like a shop: created, opened, serving customers, paused for interruption, closed, and finally destroyed.",
+      mistakes: ["Starting camera/location in onCreate and never stopping", "Saving important state only in fields", "Ignoring process death"],
+      example: "override fun onStart() {\n    super.onStart()\n    locationClient.start()\n}\n\noverride fun onStop() {\n    locationClient.stop()\n    super.onStop()\n}",
+      storyboard: ["Activity is created", "UI becomes visible", "User interacts", "Another screen covers it", "Release heavy resources"],
+    },
+    payment: {
+      diagram: "App -> Server: create order\nApp -> Razorpay: checkout(orderId)\nRazorpay -> App: paymentId/signature\nApp -> Server: verify signature\nServer -> App: success/failure",
+      analogy: "Payment flow is like a bank cheque: the customer shows a receipt, but the shop confirms it with the bank before marking the order paid.",
+      mistakes: ["Trusting client callback without server verification", "Creating duplicate orders on retry", "Not handling cancelled/failed callbacks"],
+      example: "fun onPaymentSuccess(paymentId: String, signature: String) {\n    viewModelScope.launch {\n        val verified = repo.verifyPayment(paymentId, signature)\n        _state.value = if (verified) Paid else PaymentFailed\n    }\n}",
+      storyboard: ["Create order on backend", "Open checkout UI", "Receive callback", "Verify on server", "Show final state"],
+    },
+    "two-sum": {
+      diagram: "nums:  [2, 7, 11]\ntarget: 9\nfor 2 -> need 7\nmap has 7? no -> store 2\nfor 7 -> need 2\nmap has 2? yes -> answer",
+      analogy: "Two Sum is like finding two grocery items that exactly match your budget. You remember previous prices so you do not re-check everything.",
+      mistakes: ["Using nested loops when O(n) is expected", "Storing after checking in the wrong order for same index", "Returning values instead of indices when interviewer asks indices"],
+      example: "fun twoSum(nums: IntArray, target: Int): IntArray {\n    val seen = HashMap<Int, Int>()\n    nums.forEachIndexed { i, n ->\n        seen[target - n]?.let { return intArrayOf(it, i) }\n        seen[n] = i\n    }\n    return intArrayOf()\n}",
+      storyboard: ["Read current number", "Calculate complement", "Check HashMap", "Return pair if found", "Otherwise store current"],
+    },
+    "binary-search": {
+      diagram: "low -------- mid -------- high\nif target < mid: keep left half\nif target > mid: keep right half",
+      analogy: "Binary search is like opening a dictionary near the middle and repeatedly throwing away the half that cannot contain the word.",
+      mistakes: ["Using binary search on unsorted/non-monotonic data", "Wrong loop condition causing infinite loop", "mid = (low + high) / 2 overflow in some languages"],
+      example: "fun binarySearch(a: IntArray, target: Int): Int {\n    var l = 0; var r = a.lastIndex\n    while (l <= r) {\n        val mid = l + (r - l) / 2\n        when {\n            a[mid] == target -> return mid\n            a[mid] < target -> l = mid + 1\n            else -> r = mid - 1\n        }\n    }\n    return -1\n}",
+      storyboard: ["Pick middle", "Compare target", "Discard half", "Repeat", "Return index or -1"],
+    },
+    flow: {
+      diagram: "Repository emits Flow\n        |\n        v\nViewModel stateIn/shareIn\n        |\n        v\nUI collectWithLifecycle",
+      analogy: "Flow is like a water pipeline: data comes when collected, and operators are filters attached to the pipe.",
+      mistakes: ["Collecting Flow without lifecycle awareness", "Using StateFlow for one-time navigation events", "Forgetting catch/retry around network streams"],
+      example: "val uiState = repository.observeOrders()\n    .map { orders -> UiState.Success(orders) }\n    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)",
+      storyboard: ["Repository creates stream", "Operators transform data", "ViewModel exposes state", "UI collects", "Lifecycle stops collection safely"],
+    },
+    room: {
+      diagram: "Entity <-> DAO <-> RoomDatabase <-> SQLite\n   ^                              |\n   +--------- Flow<List<T>> -------+",
+      analogy: "Room is like a librarian: you ask through DAO methods, and the librarian safely reads/writes the SQLite shelves.",
+      mistakes: ["Running DB work on main thread", "Changing schema without migration", "Putting business logic inside DAO"],
+      example: "@Dao\ninterface OrderDao {\n    @Query(\"SELECT * FROM orders ORDER BY createdAt DESC\")\n    fun observeOrders(): Flow<List<OrderEntity>>\n}",
+      storyboard: ["Define Entity", "Write DAO query", "Room validates SQL", "Repository observes Flow", "UI updates from database"],
+    },
+  };
+
+  const CATEGORY_TEACHING = {
+    java: {
+      diagram: "Input object -> method/collection -> behavior\n       |              |\n       v              v\n equals/hash/thread  correctness",
+      analogy: "Java concepts are like the engine parts under Android. Users do not see them, but if they are wrong the app overheats.",
+      mistakes: ["Memorizing definitions without practical examples", "Ignoring equals/hashCode contracts", "Forgetting thread-safety and memory implications"],
+      example: "val names = listOf(\"A\", \"B\")\nval unique = names.toSet()\nprintln(unique.contains(\"A\"))",
+      storyboard: ["Identify concept", "State contract", "Show Android use", "Mention trade-off", "Give safe practice"],
+    },
+    kotlin: {
+      diagram: "Kotlin feature -> safer syntax -> cleaner Android code\n      |                 |              |\n null safety       coroutines      data/sealed",
+      analogy: "Kotlin is like a smart assistant in the IDE: it prevents many mistakes before the app reaches production.",
+      mistakes: ["Overusing !!", "Using GlobalScope", "Making everything mutable with var"],
+      example: "data class User(val id: String, val name: String)\nval displayName = user.name.ifBlank { \"Guest\" }",
+      storyboard: ["Pick Kotlin feature", "Explain safety/productivity", "Show Android pattern", "Warn about misuse", "Give concise code"],
+    },
+    android: {
+      diagram: "User -> UI -> ViewModel -> Repository -> API/DB\n  ^                                      |\n  +--------------- state ----------------+",
+      analogy: "An Android app is like a delivery system: UI takes the order, ViewModel coordinates, Repository talks to warehouse/API.",
+      mistakes: ["Putting all logic in Activity", "Blocking main thread", "Ignoring lifecycle/process death"],
+      example: "lifecycleScope.launch {\n    repeatOnLifecycle(Lifecycle.State.STARTED) {\n        viewModel.state.collect { render(it) }\n    }\n}",
+      storyboard: ["User action", "UI delegates", "ViewModel updates state", "Data layer responds", "UI renders result"],
+    },
+    dsa: {
+      diagram: "Problem -> pattern -> data structure -> complexity\n             |          |             |\n          TwoSum     HashMap        O(n)",
+      analogy: "DSA is like choosing the right vehicle: bicycle for short paths, truck for heavy data, train for repeated route.",
+      mistakes: ["Jumping to code without clarifying input/output", "Not explaining complexity", "Ignoring edge cases"],
+      example: "fun isEmptyList(items: List<Int>?) = items.isNullOrEmpty()",
+      storyboard: ["Clarify input/output", "Start brute force", "Pick pattern", "Optimize", "Discuss complexity"],
+    },
+    architecture: {
+      diagram: "Feature module -> Domain contract -> Data implementation\n       |                 |                 |\n      UI              UseCase          API/Room",
+      analogy: "Architecture is like city planning: roads, zones, and rules make the city scalable instead of chaotic.",
+      mistakes: ["Creating modules without boundaries", "Skipping observability/testing", "Adding abstractions with no purpose"],
+      example: "interface OrdersRepository {\n    fun observeOrders(): Flow<List<Order>>\n    suspend fun syncOrders()\n}",
+      storyboard: ["Clarify constraints", "Choose boundaries", "Define data flow", "Plan testing/monitoring", "Explain trade-offs"],
+    },
+  };
+
+  function getTeaching(type, categoryId) {
+    return TEACHING_OVERRIDES[type] || CATEGORY_TEACHING[categoryId] || CATEGORY_TEACHING.android;
+  }
+
+  function renderList(items) {
+    return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  }
+
+  function renderStoryboard(steps) {
+    return steps
+      .map((step, index) => `
+        <li>
+          <span>${index + 1}</span>
+          <p>${escapeHtml(step)}</p>
+        </li>
+      `)
+      .join("");
+  }
+
+  function renderTeachingPanel(type, categoryId) {
+    const teaching = getTeaching(type, categoryId);
+    return `
+      <div class="iqa-visual-teaching">
+        <div class="iqa-teach-card iqa-diagram-card">
+          <h5><i class="fa-solid fa-diagram-project"></i> ASCII diagram</h5>
+          <pre>${escapeHtml(teaching.diagram)}</pre>
+        </div>
+        <div class="iqa-teach-card">
+          <h5><i class="fa-solid fa-earth-asia"></i> Real-world analogy</h5>
+          <p>${escapeHtml(teaching.analogy)}</p>
+        </div>
+        <div class="iqa-teach-card">
+          <h5><i class="fa-solid fa-triangle-exclamation"></i> Common mistakes</h5>
+          <ul>${renderList(teaching.mistakes)}</ul>
+        </div>
+        <div class="iqa-teach-card">
+          <h5><i class="fa-solid fa-code"></i> Kotlin example</h5>
+          <pre><code>${escapeHtml(teaching.example)}</code></pre>
+        </div>
+        <div class="iqa-teach-card iqa-story-card">
+          <h5><i class="fa-solid fa-film"></i> Step-by-step animation storyboard</h5>
+          <ol>${renderStoryboard(teaching.storyboard)}</ol>
+        </div>
+      </div>`;
+  }
+
   function renderVisual(q, categoryId) {
     const type = resolveVisualType(q, categoryId);
     const stage = VISUALS[type] || VISUALS["default-android"];
@@ -549,6 +699,7 @@
           <small>${escapeHtml(label)}</small>
         </div>
         <div class="vis-stage vis-play">${stage}</div>
+        ${renderTeachingPanel(type, categoryId)}
       </div>`;
   }
 
