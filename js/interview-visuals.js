@@ -645,6 +645,141 @@
     return TEACHING_OVERRIDES[type] || CATEGORY_TEACHING[categoryId] || CATEGORY_TEACHING.android;
   }
 
+  const OFFICIAL_REFERENCES = {
+    mvvm: {
+      title: "Android official architecture diagram",
+      figure: "UI layer / UDF diagrams",
+      url: "https://developer.android.com/topic/architecture/ui-layer",
+      source: "Android Developers",
+    },
+    ssot: {
+      title: "Android official app architecture diagram",
+      figure: "Guide to app architecture",
+      url: "https://developer.android.com/topic/architecture",
+      source: "Android Developers",
+    },
+    lifecycle: {
+      title: "Activity lifecycle official diagram",
+      figure: "Activity lifecycle",
+      url: "https://developer.android.com/guide/components/activities/activity-lifecycle",
+      source: "Android Developers",
+    },
+    fragment: {
+      title: "Fragment lifecycle official diagram",
+      figure: "Fragment lifecycle",
+      url: "https://developer.android.com/guide/fragments/lifecycle",
+      source: "Android Developers",
+    },
+    room: {
+      title: "Room architecture official docs",
+      figure: "Room persistence library overview",
+      url: "https://developer.android.com/training/data-storage/room",
+      source: "Android Developers",
+    },
+    flow: {
+      title: "Flow official documentation",
+      figure: "Asynchronous Flow examples",
+      url: "https://kotlinlang.org/docs/flow.html",
+      source: "Kotlin Documentation",
+    },
+    coroutine: {
+      title: "Coroutine official documentation",
+      figure: "Coroutine basics and structured concurrency",
+      url: "https://kotlinlang.org/docs/coroutines-basics.html",
+      source: "Kotlin Documentation",
+    },
+    compose: {
+      title: "Compose official mental model",
+      figure: "State and recomposition",
+      url: "https://developer.android.com/develop/ui/compose/mental-model",
+      source: "Android Developers",
+    },
+    navigation: {
+      title: "Navigation official diagram/docs",
+      figure: "Navigation graph",
+      url: "https://developer.android.com/guide/navigation",
+      source: "Android Developers",
+    },
+    workmanager: {
+      title: "WorkManager official docs",
+      figure: "Background work guide",
+      url: "https://developer.android.com/topic/libraries/architecture/workmanager",
+      source: "Android Developers",
+    },
+    paging: {
+      title: "Paging official architecture docs",
+      figure: "Paging library overview",
+      url: "https://developer.android.com/topic/libraries/architecture/paging/v3-overview",
+      source: "Android Developers",
+    },
+    hilt: {
+      title: "Hilt official dependency graph docs",
+      figure: "Dependency injection with Hilt",
+      url: "https://developer.android.com/training/dependency-injection/hilt-android",
+      source: "Android Developers",
+    },
+    fcm: {
+      title: "Firebase Cloud Messaging official docs",
+      figure: "FCM message flow",
+      url: "https://firebase.google.com/docs/cloud-messaging",
+      source: "Firebase Documentation",
+    },
+    payment: {
+      title: "Razorpay official payment flow docs",
+      figure: "Android payment gateway integration",
+      url: "https://razorpay.com/docs/payments/payment-gateway/android-integration/standard/",
+      source: "Razorpay Documentation",
+    },
+    idempotent: {
+      title: "Razorpay official payment docs",
+      figure: "Payment verification / order flow",
+      url: "https://razorpay.com/docs/payments/server-integration/nodejs/integration-steps/",
+      source: "Razorpay Documentation",
+    },
+    "default-android": {
+      title: "Android official app architecture diagram",
+      figure: "UI layer and data layer",
+      url: "https://developer.android.com/topic/architecture",
+      source: "Android Developers",
+    },
+    "default-kotlin": {
+      title: "Kotlin official documentation",
+      figure: "Language and coroutine concepts",
+      url: "https://kotlinlang.org/docs/home.html",
+      source: "Kotlin Documentation",
+    },
+    "default-java": {
+      title: "Java official documentation",
+      figure: "Java language concepts",
+      url: "https://docs.oracle.com/javase/tutorial/java/",
+      source: "Oracle Java Tutorials",
+    },
+    "default-dsa": {
+      title: "Kotlin collections official docs",
+      figure: "Collections and operations",
+      url: "https://kotlinlang.org/docs/collections-overview.html",
+      source: "Kotlin Documentation",
+    },
+    "default-arch": {
+      title: "Android official architecture recommendations",
+      figure: "Architecture recommendations",
+      url: "https://developer.android.com/topic/architecture/recommendations",
+      source: "Android Developers",
+    },
+  };
+
+  const CATEGORY_REFERENCES = {
+    java: OFFICIAL_REFERENCES["default-java"],
+    kotlin: OFFICIAL_REFERENCES["default-kotlin"],
+    android: OFFICIAL_REFERENCES["default-android"],
+    dsa: OFFICIAL_REFERENCES["default-dsa"],
+    architecture: OFFICIAL_REFERENCES["default-arch"],
+  };
+
+  function getOfficialReference(type, categoryId) {
+    return OFFICIAL_REFERENCES[type] || CATEGORY_REFERENCES[categoryId] || OFFICIAL_REFERENCES["default-android"];
+  }
+
   function renderList(items) {
     return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   }
@@ -662,8 +797,18 @@
 
   function renderTeachingPanel(type, categoryId) {
     const teaching = getTeaching(type, categoryId);
+    const official = getOfficialReference(type, categoryId);
     return `
       <div class="iqa-visual-teaching">
+        <div class="iqa-teach-card iqa-official-card">
+          <h5><i class="fa-solid fa-book-atlas"></i> Official docs diagram/reference</h5>
+          <p><strong>${escapeHtml(official.title)}</strong></p>
+          <p class="iqa-official-figure">${escapeHtml(official.figure)} · ${escapeHtml(official.source)}</p>
+          <a href="${escapeHtml(official.url)}" target="_blank" rel="noopener" class="iqa-official-link">
+            Open official document <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+          <small>External source is linked with attribution instead of copying images into this repo.</small>
+        </div>
         <div class="iqa-teach-card iqa-diagram-card">
           <h5><i class="fa-solid fa-diagram-project"></i> ASCII diagram</h5>
           <pre>${escapeHtml(teaching.diagram)}</pre>
