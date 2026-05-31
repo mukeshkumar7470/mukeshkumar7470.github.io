@@ -920,8 +920,13 @@ body:hover .cursor-glow { opacity: 1; }
 
 /* Dedicated interview page */
 .interview-page .interview-page-main {
-  padding-top: calc(var(--header-h) + 2rem);
+  padding-top: calc(var(--header-h) + 4.5rem);
   padding-bottom: 3rem;
+}
+
+.interview-page .interview-bottom-header {
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .interview-page .site-header {
