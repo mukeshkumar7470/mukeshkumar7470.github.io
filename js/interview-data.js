@@ -1,4 +1,4 @@
-/* Interview Q&A — Java, Kotlin, Android, DSA, Senior Architecture */
+/* Interview Q&A — deep answers (Java, Kotlin, Android, DSA, Architecture) */
 const INTERVIEW_QA = [
   {
     "id": "java",
@@ -7,68 +7,68 @@ const INTERVIEW_QA = [
     "items": [
       {
         "q": "Difference between == and .equals()?",
-        "en": "== compares references for objects (values for primitives). .equals() compares logical equality when overridden. For strings use .equals() or Objects.equals().",
-        "hi": "== object ka memory address compare karta hai; .equals() content compare karta hai jab override ho. String par hamesha .equals() use karo."
+        "en": "For primitives (int, boolean, etc.), == compares values directly.\n\nFor objects, == checks reference equality — whether two variables point to the same memory instance. .equals() is intended for logical/content equality when the class overrides it (e.g., String, Integer, your data models).\n\nDefault Object.equals() behaves like == until overridden. When overriding equals(), always override hashCode() too — contract required for HashMap, HashSet, and Room entities used as keys.\n\nAndroid practice: Use == only when you need identity (same instance). For UI/state comparison use .equals() or Kotlin structural equality. For strings use TextUtils.equals() in Java or Kotlin String comparison.\n\nCommon trap: String literals and new String(\"a\") — == may appear equal due to string pool; still prefer .equals() in Java code.",
+        "hi": "Primitives par == value compare karta hai — jaise do int 5 aur 5.\n\nObjects par == ka matlab hai: kya dono references ek hi heap object ki taraf point kar rahe hain? .equals() ka matlab hai: kya dono ka logical content same hai — lekin tabhi jab class ne equals() override kiya ho.\n\nString, data class, API model par hamesha content compare .equals() se karo. HashMap key banate waqt equals + hashCode dono sahi hona chahiye warna get/put galat kaam karega.\n\nAndroid interview example: Room se aaye do User objects — same userId ho sakta hai par == false agar alag instances hon. Payment status compare karte waqt == galat choice ho sakti hai.\n\nYaad rakho: Objects.equals(a,b) null-safe hai; Java mein a.equals(b) par a null ho to crash."
       },
       {
         "q": "Explain OOP pillars with Android relevance",
-        "en": "Encapsulation hides state; inheritance reuses code; polymorphism is one interface many implementations; abstraction exposes essentials. Android uses listeners, AppCompatActivity, and private ViewModel fields.",
-        "hi": "Encapsulation data protect; inheritance Activity extend; polymorphism RecyclerView adapters; abstraction interfaces/DAO. Modern Android mein composition zyada prefer."
+        "en": "Encapsulation: Hide internal state; expose behavior via methods. Android: private fields in ViewModel, Repository impl hidden behind interface — UI cannot mutate DB directly.\n\nInheritance: Reuse parent behavior (AppCompatActivity, Fragment). Prefer shallow hierarchies; favor composition (delegate, Hilt-injected collaborators) over deep inheritance trees.\n\nPolymorphism: One interface, many implementations — OnClickListener, Repository interface, PaymentGateway strategy. Runtime binding enables testing with fakes.\n\nAbstraction: Expose what, hide how — DAO interface, Retrofit API, domain use-case. Reduces coupling between layers.\n\nInterview angle: Tie to MVVM/Clean Architecture — each pillar maps to maintainability, testability, and team scaling on large apps like e-commerce or government apps.",
+        "hi": "Encapsulation: Andar ka data chhupao, bahar sirf zaroori methods dikhao. ViewModel state private, UI sirf observe kare — yahi Android MVVM ka discipline hai.\n\nInheritance: Activity/Fragment extend karna common hai, lekin zyada deep inheritance se tight coupling badhti hai. Zyada tar composition + interfaces better.\n\nPolymorphism: Ek OnClickListener alag screens par alag kaam; ek Repository interface par FakeRepo test ke liye. Production mein impl swap easy.\n\nAbstraction: User ko sirf placeOrder() dikhe, andar Razorpay + Room + API mix hidden rahe. Clean Architecture yahi enforce karti hai.\n\nInterview mein apne project jodo: ShopKirana B2B, Zila cart — kaun sa pillar kahan use hua, short example do."
       },
       {
         "q": "ArrayList vs LinkedList",
-        "en": "ArrayList: array-backed, O(1) random access, slower middle insert. LinkedList: fast ends insert, slow random access. Android lists usually ArrayList.",
-        "hi": "ArrayList index fast; LinkedList middle insert better par get slow. App mein zyada tar ArrayList/List."
+        "en": "ArrayList: Dynamic array internally — get(i) is O(1), add at end amortized O(1), insert/delete in middle O(n) due to shifting.\n\nLinkedList: Doubly-linked nodes — insert/delete at known node O(1) if you have reference, but get(i) is O(n) because traversal is required.\n\nMemory: ArrayList has better cache locality; LinkedList has extra pointer overhead per element.\n\nAndroid: RecyclerView adapters, API response lists, in-memory caches almost always use ArrayList or Kotlin List. LinkedList rarely appears in app layer code.\n\nWhen to mention LinkedList in interview: Queue/deque patterns (ArrayDeque is often better), or theoretical comparison — not typical production Android choice.",
+        "hi": "ArrayList andar array jaisa grow karta hai — index se turant element milta hai. Beech mein insert/delete par elements shift hote hain isliye slow.\n\nLinkedList har node se next/prev link — beech mein insert achha ho sakta hai par 500th element chahiye to traverse karna padega.\n\nMobile app mein 99% cases ArrayList / immutable List kaafi hai — product list, chat messages UI ke liye.\n\nInterview tip: RecyclerView + DiffUtil ke saath ArrayList backed list standard hai. LinkedList ka naam aaye to bolo 'theoretical, practical Android mein kam'."
       },
       {
         "q": "final, finally, and finalize()",
-        "en": "final restricts variable/method/class. finally runs after try/catch for cleanup. finalize() is deprecated; use try-with-resources.",
-        "hi": "final change band; finally cleanup; finalize GC ke liye unreliable — try-with-resources better."
+        "en": "final variable: Assign once (reference cannot change; object internals may still mutate unless deeply immutable). final method: Cannot override. final class: Cannot extend (String is effectively immutable design).\n\nfinally: Executes after try/catch block — used for cleanup (close streams). If return in try, finally still runs before method actually returns. Can mask exceptions if finally also throws.\n\nModern Java/Android: prefer try-with-resources (AutoCloseable) over manual finally for files, cursors, streams.\n\nfinalize(): Called by GC before collecting object — unreliable timing, deprecated. Never depend on it for resource cleanup; caused memory/leak confusion.\n\nInterview: Emphasize deterministic cleanup (use {}, Coroutines finally block, Room auto-close) vs GC-dependent finalize.",
+        "hi": "final: Variable dubara assign nahi; method override nahi; class extend nahi. Immutable design ke liye important — lekin final List ke andar add/remove ho sakta hai agar list mutable ho.\n\nfinally: Try/catch ke baad hamesha chalne ki koshish — file close yahan. Return try mein ho tab bhi finally pehle execute hota hai — interview detail.\n\ntry-with-resources best: Database, stream auto close. Android cursor purane code mein finally dekha jata tha.\n\nfinalize() GC par depend karta tha — kabhi call ho kabhi nahi. Production mein bilkul mat rely karo; deprecated mindset bolo interview mein."
       },
       {
         "q": "Checked vs Unchecked exceptions",
-        "en": "Checked must be caught/declared (IOException). Unchecked extend RuntimeException (NPE). Kotlin/Android often use Result/sealed errors.",
-        "hi": "Checked compile force catch; Unchecked bugs/logic errors. Android mein runtime + Result patterns common."
+        "en": "Checked exceptions (extends Exception, not RuntimeException): Compiler forces handle or declare — IOException, SQLException. Design intent: recoverable, caller must acknowledge.\n\nUnchecked (extends RuntimeException): NPE, IllegalArgumentException — programming bugs or unrecoverable logic errors; no compile-time enforcement.\n\nAndroid/Kotlin trend: Many APIs wrap checked into unchecked or use Result/Either/sealed error types. Coroutines use try/catch around suspend calls; Retrofit can use HttpException.\n\nBest practice: Catch where you can meaningfully recover (retry network); propagate domain errors as typed failures; don't swallow exceptions — log to Crashlytics.\n\nInterview: Explain trade-off — checked verbosity vs unchecked crash risk; Kotlin avoids checked entirely for ergonomics.",
+        "hi": "Checked exception par compiler zor deta hai — ya to catch karo ya throws declare karo. File/network jaisi cheez recover ho sakti hai isliye design.\n\nUnchecked runtime par crash ya global handler — galat logic, null, illegal state. Zyada tar app bugs yahi hain.\n\nKotlin mein checked nahi — try/catch ya Result type. ViewModel mein API fail → UiState.Error emit karo, silent swallow mat karo.\n\nInterview example: Login fail — user ko message + retry; developer ko Crashlytics non-fatal log. Checked vs unchecked philosophy samjhao, sirf definition nahi."
       },
       {
         "q": "String vs StringBuilder vs StringBuffer",
-        "en": "String immutable. StringBuilder mutable, not thread-safe, faster. StringBuffer mutable, synchronized, slower.",
-        "hi": "Loop concat ke liye StringBuilder; String har bar naya object. StringBuffer thread-safe rare use."
+        "en": "String is immutable — each concat creates new object (old + new copied). In loops this is O(n²) time and heavy GC pressure.\n\nStringBuilder: Mutable char sequence, not synchronized — use in single-threaded string building (local methods, JSON assembly in memory).\n\nStringBuffer: Like StringBuilder but synchronized — thread-safe, slower; legacy, rare in new Android code.\n\nKotlin: String templates and buildString {} compile efficiently; still avoid massive concat in tight loops.\n\nAndroid: Logging, SQL query building (prefer parameterized queries), UI text — for dynamic large text use StringBuilder. Network parsing usually library handles (Gson/Moshi).",
+        "hi": "String immutable — har + par naya object. 1000 baar loop concat GC aur CPU dono kill karta hai.\n\nStringBuilder ek hi buffer mein append — interview mein loop concat ka jawab yahi. Thread-safe nahi — UI thread par theek.\n\nStringBuffer synchronized — multi-thread rare case; speed kam. Naya code mein kam.\n\nKotlin buildString readable hai. Log message, local parsing ke liye StringBuilder yaad rakho.\n\nPractical tip: Database query mein string concat SQL injection risk — parameterized queries/ Room use karo."
       },
       {
         "q": "HashMap internal working (brief)",
-        "en": "Hash code maps to buckets; collisions use list/tree. O(1) average get/put. Proper hashCode() and equals() required.",
-        "hi": "hashCode bucket decide; collision par list/tree. Galat hashCode sab ek bucket — slow."
+        "en": "HashMap stores Node<K,V> in buckets indexed by hash(key) % capacity. get: compute hash → find bucket → equals() match keys along chain/tree.\n\nJava 8+: If bucket chain length exceeds threshold, converts to red-black tree for O(log n) worst case instead of O(n).\n\nLoad factor (default 0.75) triggers resize/rehash when table grows — doubles capacity, reindexes entries.\n\nContract: If two keys are equal, hash codes must be equal. Unequal keys may share hash (collision) — equals() disambiguates.\n\nAndroid: HashMap for in-memory caches, lookup maps; consider LruCache for bounded memory. For thread-safe maps ConcurrentHashMap, not HashMap.",
+        "hi": "Key ka hashCode bucket index banata hai. Collision = ek bucket par multiple entries — pehle linked list, zyada par tree (Java 8+).\n\nResize tab hota hai jab table bharne lagta hai — purane entries rehash — performance spike possible interview point.\n\nequals() aur hashCode() saath override na karo to HashMap 'key not found' jaisa behave karega galat tarike se.\n\nAndroid: O(1) average lookup fast filters, id→object maps. Thread safety chahiye to ConcurrentHashMap; UI thread par shared mutable HashMap se bacho."
       },
       {
         "q": "Interface vs Abstract class",
-        "en": "Interface defines contract with default methods. Abstract class can have state and constructors. Prefer interface for capabilities.",
-        "hi": "Interface can-do; abstract class shared state. Android listeners interface; composition over deep inheritance."
+        "en": "Interface: Contract of capabilities; Java 8+ default/static methods. A class can implement multiple interfaces. No instance state requirement (fields public static final only traditionally).\n\nAbstract class: Can have constructors, instance fields, partial implementation. Single inheritance in Java.\n\nChoose interface for 'can do' (Clickable, Repository). Choose abstract class when sharing substantial code + state among close types — less common in modern Android (favor composition).\n\nAndroid examples: Repository interface; OnClickListener; Room Dao is interface. Test doubles implement same interface.\n\nKotlin: interfaces can have implementation; abstract class still useful for sealed hierarchies' base (rare).",
+        "hi": "Interface = capability contract — implement multiple. Android listener, Repository, DAO sab interface culture.\n\nAbstract class = kuch code + state share karo ek branch mein — Java single inheritance limit.\n\nDesign rule: Zyada interface, kam deep abstract hierarchy — test aur Hilt binding easy.\n\nInterview: FakeRepository implements Repository — unit test. Abstract class tab jab 3 child mein 80% same code ho — warna delegate/composition."
       },
       {
         "q": "What is garbage collection?",
-        "en": "GC frees unreachable objects. Prevent leaks via reference management; do not rely on System.gc() in production.",
-        "hi": "Reachable objects survive; leak jab reference unnecessary reh jaye. Android onTrimMemory low memory par."
+        "en": "GC reclaims heap memory of objects unreachable from GC roots (thread stacks, static refs, JNI globals). Developers don't free manually like C++.\n\nGenerational GC (conceptual): Most objects die young — Eden collection frequent; survivors promote to older generations; full GC less frequent but costlier.\n\nAndroid ART: Concurrent copying/collector optimizations; still watch allocations on main thread during scroll (jank) and memory leaks (retained Activity).\n\nLeak vs GC: GC cannot collect if reference chain still exists — static Activity, running coroutine holding Context, listener not removed.\n\nTools: Android Studio Profiler, LeakCanary. onTrimMemory() release caches under system pressure.",
+        "hi": "GC wo objects uda deta hai jin tak koi strong reference chain nahi — developer manually delete nahi karta Java mein.\n\nYoung generation mein zyada tar short-lived objects (bitmap temp, list in method) mar jate hain jaldi.\n\nLeak alag hai: object useful nahi par reference lagi hai — GC collect nahi kar sakta. Activity leak classic example.\n\nMain thread par bahut allocation scroll mein jank — GC pause feel ho sakta hai. Object pool / reuse kabhi kabhi help.\n\nLeakCanary, Profiler interview mein naam lo. Low memory par onTrimMemory se cache clear — MP eNagarpalika jaisi heavy app mein useful."
       },
       {
         "q": "Java generics and type erasure",
-        "en": "Generics give compile-time safety; erasure removes type info at runtime. Cannot new T() in Java without workarounds.",
-        "hi": "Compile time type check; runtime par List<String> -> List. PECS: ? extends / ? super."
+        "en": "Generics add compile-time type safety: List<String> cannot accept Integer at compile time. Runtime erasure removes type parameters — List<String> becomes raw List at bytecode for JVM compatibility.\n\nConsequences: Cannot new T(), cannot instanceof List<String>, need Class<T> passed explicitly for reflection (Retrofit, Gson TypeToken).\n\nPECS: Producer Extends, Consumer Super — ? extends T read-only producer; ? super T write consumer (Collections.copy pattern).\n\nKotlin: Reified generics with inline functions recover type at compile time in limited scopes.\n\nAndroid interview: Explain why Gson needs TypeToken<List<User>> — erasure loses List<User> class at runtime.",
+        "hi": "Compile time par List<String> mein Integer add error — safety. Runtime par type information gayab — erasure.\n\nIsliye Java mein new T() nahi bana sakte bina trick ke. Retrofit/Gson ko TypeToken chahiye runtime type ke liye.\n\nPECS rule yaad karo: extends = read, super = write — API design interviews mein aa sakta hai.\n\nKotlin inline reified alag story — compile time type retain hota hai specific cases mein.\n\nSimple Hindi: Compiler pakad leta hai galti; runtime par generics ka naam nahi bachta — isliye reflection careful."
       },
       {
         "q": "synchronized vs volatile",
-        "en": "synchronized: mutual exclusion + visibility. volatile: visibility only, not atomic compound ops. Prefer AtomicInteger or coroutines.",
-        "hi": "synchronized ek thread block; volatile visibility — count++ safe nahi. Coroutines/Atomic better."
+        "en": "synchronized block/method: Mutual exclusion — only one thread enters; also flushes/invalidate thread-local cache for visibility (happens-before).\n\nvolatile: Ensures read/write visibility across threads for one variable; no compound atomicity — count++ still races.\n\nHigher-level alternatives: java.util.concurrent.atomic.* (AtomicInteger), locks (ReentrantLock), Kotlin Mutex, coroutines with single-thread dispatcher.\n\nAndroid: Main thread is single for UI — synchronization issues mainly background threads (image decode pool, cache maps). Prefer immutable data structures and main-safe callbacks.\n\nAvoid synchronizing entire Activity methods — deadlock/UI ANR risk if wrong.",
+        "hi": "synchronized: Ek time par ek thread critical section mein — visibility bhi fix. Galat lock order se deadlock ho sakta hai.\n\nvolatile: Variable ki value sab threads ko dikhe fresh — par i++ atomic nahi, do thread same i padh kar increment kar sakte hain.\n\nAndroid UI thread already single — background workers par AtomicInteger, ConcurrentHashMap, ya coroutine Mutex socho.\n\nInterview: Purane Java singleton double-checked locking mein volatile important tha — ab object holder ya Hilt better.\n\nPractical: Shared mutable state kam karo — immutable state + Flow emit safer pattern modern app mein."
       },
       {
         "q": "Reflection — pros and cons",
-        "en": "Runtime class inspection (Gson, Hilt). Cons: slow, ProGuard issues. Use keep rules for reflective libs.",
-        "hi": "Frameworks use reflection; app code mein kam. R8 rules zaroori."
+        "en": "Reflection inspects classes/methods/fields at runtime by name — Class.forName, getDeclaredMethod, invoke. Powers frameworks: Gson field injection, Hilt/Dagger code gen (compile-time preferred), Retrofit adapters.\n\nCons: Breaks compile-time safety; slower; obfuscation (R8) renames classes — needs -keep rules; security scrutiny on Play.\n\nAndroid release: R8 shrinking removes unused code; reflective access to models must be kept in proguard-rules.pro.\n\nInterview stance: Libraries use reflection; application business logic should prefer explicit APIs, compile-time DI, and code generation (KSP, Room, Hilt).",
+        "hi": "Reflection runtime par class ka structure padhta hai — Gson private fields set karta hai isi se. Hilt actually compile time codegen prefer karta hai.\n\nProblems: Slow, R8 rename se ClassNotFound, stack trace mushkil. Release build mein keep rules zaroori Retrofit models ke liye.\n\nApp code mein reflection kam — explicit mapping, Moshi codegen, Room compile time SQL better.\n\nInterview sentence: 'Frameworks handle reflection; maine production mein manual reflection avoid kiya unless library required.'"
       },
       {
         "q": "Comparable vs Comparator",
-        "en": "Comparable natural ordering (compareTo). Comparator external custom sort without changing class.",
-        "hi": "Comparable default sort; Comparator alag orders. Kotlin sortedBy/compareBy."
+        "en": "Comparable<T>: Implemented by the class itself — compareTo defines natural ordering (Employee by id). Used in sort(), TreeSet.\n\nComparator<T>: External strategy — multiple sort orders without changing class (by name, by date). Java 8 Comparator.comparing(), thenComparing().\n\nKotlin: sorted(), sortedBy {}, compareBy {} more idiomatic.\n\nAndroid: Sort product list by price/rating in ViewModel before emitting UI state; keep sorting off main thread for large lists.\n\nStability: Sort stability matters for UI diff — mention tie-breaking for equal keys.",
+        "hi": "Comparable = class apna natural order define kare — compareTo. Comparator = bahar se alag sort logic — price, name, date.\n\nEk hi Product class — Comparator se price ya rating sort bina class change kiye.\n\nBadi list sort background dispatcher par — main thread ANR. Kotlin sortedByDescending practical.\n\nInterview example: Order list date descending UI mein — ViewModel mein sort karke StateFlow emit."
       }
     ]
   },
@@ -79,83 +79,83 @@ const INTERVIEW_QA = [
     "items": [
       {
         "q": "Why Kotlin over Java for Android?",
-        "en": "Null safety, concision, coroutines, data classes, extensions, official Android support, Java interop.",
-        "hi": "NPE kam, coroutines async, data class copy/equals free. Java code saath chal sakta hai migration mein."
+        "en": "Kotlin is Google's preferred language for Android with first-class Jetpack, Compose, and coroutine support. Null safety at compile time eliminates a huge class of NPE crashes that still plague Java codebases in production.\n\nConcise syntax — data classes, extension functions, default parameters, and smart casts reduce boilerplate compared to Java POJOs, builders, and verbose null checks.\n\nCoroutines provide structured concurrency for network, Room, and Razorpay flows without callback hell or raw thread management. Java interop lets you migrate module-by-module — ShopKirana-style brownfield apps rarely rewrite everything at once.\n\nOfficial Android docs, samples, and new APIs (Compose, Paging 3, DataStore) assume Kotlin idioms. Interview angle: cite measurable wins — fewer NPEs in Crashlytics, faster feature delivery, easier onboarding for teams already using Kotlin in Flutter/Dart-adjacent mobile orgs.",
+        "hi": "Google ne Android ke liye Kotlin ko officially prefer kiya hai — naye Jetpack APIs, Compose samples, aur documentation Kotlin-first hai.\n\nNull safety compile time par pakad leti hai wo crashes jo Java mein production mein bhi common hain — especially API models aur Bundle extras par.\n\ndata class, extension functions, coroutines se code chhota aur readable hota hai. Purana Java code saath chal sakta hai — migration module-by-module practical hai.\n\nCoroutines se Retrofit + Room + payment callback chains clean ho jati hain. viewModelScope structured concurrency deta hai — rotation par leak kam.\n\nInterview mein apne project jodo: Java se Kotlin shift ke baad Crashlytics NPE down, feature velocity up — concrete example bolo."
       },
       {
         "q": "val vs var vs const",
-        "en": "var mutable reference; val read-only reference (object may mutate); const compile-time constant.",
-        "hi": "val reassign nahi; andar list mutate ho sakti hai. const top-level primitives/strings."
+        "en": "var declares a mutable reference — you can reassign the variable to point to another object. val declares a read-only reference — reassignment is forbidden, but if the referenced object is mutable (e.g., ArrayList), its internal state can still change.\n\nconst val is for compile-time constants: primitives and String at top-level or in object/companion, inlined at call sites like Java static final. Use const for API keys placeholders in BuildConfig, not for runtime-computed values.\n\nAndroid convention: prefer val everywhere; use var only for local counters, UI binding refs, or lateinit-backed properties. ViewModel state exposed as val StateFlow — mutation happens inside ViewModel via private MutableStateFlow.\n\nInterview trap: val list = mutableListOf() — list reference fixed, contents mutable. Immutability for UI state means copy-on-write or persistent collections, not just val keyword.",
+        "hi": "var = dubara assign kar sakte ho; val = reference change nahi, lekin andar mutable object ho to uske andar change ho sakta hai.\n\nconst val compile-time constant hai — top-level String/Int jaisa BuildConfig flag. Runtime value ke liye const galat hai.\n\nAndroid mein default val rakho — ViewModel se bahar sirf read-only state expose karo StateFlow se. var sirf local ya lateinit jagah.\n\nInterview trap: val ke saath bhi mutableListOf() mutate ho sakti hai. UI ke liye immutable list copy karke emit karna better pattern hai.\n\nPractical: Razorpay orderId ek baar set — val; loop counter — var local."
       },
       {
         "q": "data class, sealed class, object",
-        "en": "data class: equals/hashCode/copy. sealed: exhaustive when for UI state. object: singleton.",
-        "hi": "sealed UI state Loading/Success/Error; data class API models; object singleton/factory."
+        "en": "data class auto-generates equals, hashCode, toString, copy, and componentN — ideal for API DTOs, Room entities, and UI list items. Compiler enforces primary constructor properties; use @Parcelize for Bundle-safe models.\n\nsealed class restricts subclasses to same file/module — enables exhaustive when without else. Perfect for UiState: Loading, Success(data), Error(message). Each branch can carry different payload types.\n\nobject creates a singleton — no constructor calls. Use for DI-free constants, factory helpers, or companion-scoped utilities. object vs class: object is eagerly initialized unless nested in another class.\n\nAndroid pattern: sealed interface for navigation destinations; data class for cart line items; object RepositoryModule provides Hilt bindings indirectly via @Module object.\n\nInterview: sealed beats enum when states need associated data — Error(throwable) vs enum ERROR with separate message field.",
+        "hi": "data class API/Room models ke liye — equals/hashCode/copy free. Product, Order, User DTO typical use.\n\nsealed class UI state machine — when exhaustive, compiler missing branch pakad leta hai. MVVM mein UiState sealed best practice.\n\nobject singleton — Analytics helper, constants object. Eager init — heavy work object mein mat dalo startup slow ho.\n\nenum fixed constants; sealed har state apna data le sakti hai jaise Success(orderList) vs Error(code).\n\nInterview example: Checkout screen Loading / PaymentPending / Paid / Failed — sealed with Razorpay error code."
       },
       {
         "q": "What are coroutines vs threads?",
-        "en": "Lightweight cooperative tasks; suspend without blocking threads. Use viewModelScope and dispatchers Main/IO/Default.",
-        "hi": "Thread heavy; coroutine suspend se pool efficient. Structured concurrency — parent cancel child cancel."
+        "en": "Threads are OS-level, expensive (MB stack each), limited pool — blocking a thread wastes resources. Coroutines are lightweight tasks scheduled on thread pools; suspend functions release the thread during I/O without blocking it.\n\nStructured concurrency ties child jobs to parent scope — viewModelScope cancels work when ViewModel clears; lifecycleScope respects Fragment/Activity lifecycle. SupervisorJob prevents one child failure from cancelling siblings.\n\nDispatchers: Main for UI updates, IO for network/Room/file, Default for CPU work (JSON parsing, DiffUtil prep). withContext switches dispatcher; never block Main.\n\nCompared to RxJava: less ceremony, better Kotlin integration, cancellation via Job. Compared to raw AsyncTask/Executor: modern, testable with runTest and TestDispatcher.\n\nReal pattern: Repository suspend fun fetchProducts() on IO → Flow emit to ViewModel → collect on Main with repeatOnLifecycle.",
+        "hi": "Thread heavy hota hai — limited pool; block kiya to waste. Coroutine suspend par thread free kar deti hai — same thread pool par hazaron tasks.\n\nviewModelScope, lifecycleScope structured concurrency — screen band, kaam cancel. Leak se bachne ke liye GlobalScope production mein avoid.\n\nMain UI, IO network/Room, Default CPU parsing. Razorpay verify API IO dispatcher par; result Main par UI update.\n\nRxJava se kam boilerplate; AsyncTask deprecated. Test mein runTest + UnconfinedTestDispatcher.\n\nPractical flow: FCM token save — suspend Room insert IO par, StateFlow update Main par."
       },
       {
         "q": "lateinit vs lazy",
-        "en": "lateinit var initialized later (onCreate). lazy defers until first access. Avoid lateinit if not surely set.",
-        "hi": "lateinit var baad mein set; lazy pehli access par compute. UninitializedPropertyAccessException risk."
+        "en": "lateinit var must be var, non-null, and assigned before first read — typically in onCreate, inject, or init block. Used for lateinit ViewBinding, NavController, or Hilt @Inject lateinit fields. Reading before init throws UninitializedPropertyAccessException.\n\nlazy delegates initialization until first access — thread-safe by default (LazyThreadSafetyMode.SYNCHRONIZED). Returns T, not nullable. Ideal for expensive one-time setup: Gson, Retrofit instance, encrypted prefs wrapper.\n\nlateinit cannot hold primitives; lazy can. lazy is val semantics — computed once (unless LazyThreadSafetyMode.NONE in single-thread context).\n\nAndroid: prefer by viewModels(), by lazy { ViewBinding.inflate() } in Fragment carefully (view lifecycle). For DI, constructor injection beats lateinit when possible.\n\nInterview: lateinit risk on process death — if not re-set after restore, crash. lazy survives as long as holder object lives.",
+        "hi": "lateinit baad mein set — onCreate, Hilt inject. Pehle access par set nahi to UninitializedPropertyAccessException.\n\nlazy pehli access par compute — Retrofit, Gson jaisi cheez. Thread-safe default.\n\nlateinit sirf non-null reference types; Int ke liye lazy ya nullable use karo.\n\nFragment mein binding lateinit common par onDestroyView par null karna best practice view leak avoid.\n\nInterview: lateinit vs nullable — lateinit crash loud; nullable safe call verbose. Trade-off bolo."
       },
       {
         "q": "inline, reified, higher-order functions",
-        "en": "inline copies body to avoid lambda allocation. reified keeps generic type at compile time with inline.",
-        "hi": "Generics erase Java style; reified T::class possible. Performance + type checks."
+        "en": "inline copies function body at call site — eliminates lambda object allocation for higher-order functions like let, repeat, and custom retry blocks. Non-inline lambdas capture variables and create classes.\n\nreified works only with inline — preserves generic type T at compile time because body is inlined. Enables T::class.java, type checks without passing Class<T> manually.\n\nUse cases: Retrofit response wrapper inline safeApiCall<T>, Navigation type-safe args, Gson/Moshi parse reified inline fun <reified T> parseJson.\n\nHigher-order functions take or return functions — map, filter, also ViewModel event handlers (UiEvent) -> Unit.\n\nCaution: inlining large functions increases bytecode size — mark small utilities inline only. noinline/crossinline for partial inlining when lambda stored or passed to another context.",
+        "hi": "inline call site par code copy — chhote helpers fast, lambda object kam. let, run wahi reason se inline hain.\n\nreified se T::class runtime par bina TypeToken ke — inline ke bina Java erasure mein type gayab.\n\nHigher-order = function argument/return — ViewModel mein (OrderId) -> Unit event handler pattern.\n\nPractical: inline reified NetworkResult<T> parse karna Moshi/Gson ke saath clean.\n\nBytecode size badhe to bade functions inline mat karo — interview trade-off mention karo."
       },
       {
         "q": "Null safety: ?, ?., ?:, !!",
-        "en": "Nullable types, safe call, Elvis default, !! forces NPE — avoid !! in production.",
-        "hi": "?. null par skip; ?: default; !! sirf jab 100% sure. Java interop platform types careful."
+        "en": "Kotlin type system splits String vs String? — nullable must be handled before use. Safe call ?. returns null if receiver null instead of NPE. Elvis ?: provides default: user?.name ?: \"Guest\".\n\nNot-null assertion !! crashes with NPE if null — acceptable only in tests or after explicit guard you cannot express to compiler. Production Android code: avoid !!; use requireNotNull, checkNotNull, or early return.\n\nSmart cast after if (x != null) or x is String — compiler promotes type in branch. lateinit and platform types break smart cast sometimes.\n\nJava interop: Android SDK returns platform types String! — treat as nullable defensively when from Java APIs.\n\nRoom/Retrofit with nullable columns and optional JSON fields — model nullable correctly; map to UI default in ViewModel not with !!.",
+        "hi": "String? nullable hai — use se pehle handle karo. ?. safe call — null par skip, crash nahi.\n\n?: Elvis default deta hai — cartCount ?: 0. UI mein bahut common.\n\n!! force unwrap — null par NPE. Production mein avoid; Crashlytics mein dikhega.\n\nJava Android APIs platform type deti hain — Bundle getString() nullable treat karo safe.\n\nSmart cast if check ke baad compiler samajh jata hai non-null — lateinit exception case yaad rakho."
       },
       {
         "q": "let, run, with, apply, also",
-        "en": "let(it, result); run/apply(this); with(this); also(it, returns object). apply for config, let for null checks.",
-        "hi": "Scope functions concise; zyada mat use karo — readability first."
+        "en": "let: it receiver, returns lambda result — null checks user?.let { bind(it) }. run: this receiver, returns result — run { parseConfig() }. with: non-extension run — with(binding) { title.text = x }.\n\napply: this receiver, returns object — build Retrofit.Builder apply { baseUrl(...) }. also: it receiver, returns object — side effect logging also { Log.d(tag, it.toString()) }.\n\nChoose by intent: configure object → apply; transform/null-safe → let; scoped block returning value → run/with; tap along chain → also.\n\nOveruse hurts readability — interviewers want judgment. One scope function per chain max in production code.\n\nAndroid: binding.apply { btnPay.setOnClickListener {...} } in Fragment onCreateView; dto?.let { repo.save(it) } in ViewModel.",
+        "hi": "apply configure karke object return — Builder pattern. let null check + transform. also side effect, same object pass.\n\nwith/run block scope — binding.with style ya run { computeTotal() }.\n\nReadable code priority — teen scope function ek line par mat likho interview mein bhi.\n\nNull safety: user?.let { navigateProfile(it.id) } — idiomatic Kotlin.\n\nViewBinding setup apply { } common pattern; Razorpay checkout init bhi apply block se clean."
       },
       {
         "q": "open, public, internal visibility",
-        "en": "Classes final by default; open for inheritance. internal is module-visible only.",
-        "hi": "Kotlin default final; internal multi-module hide implementation."
+        "en": "Kotlin classes/methods are final by default — must mark open for inheritance or override. Java interop: open for library extensibility; app code often prefers composition over inheritance.\n\npublic is default visibility — visible everywhere. internal visible within same Gradle module only — hide Repository impl from feature modules while exposing interface via api dependency.\n\nprivate file-level, class members. protected visible to subclasses (Kotlin also includes subclass in same file).\n\nMulti-module Android: :core:data internal DAOs, public Repository interface in :core:domain. Prevents feature modules reaching Room directly — Clean Architecture boundary.\n\nInterview: internal vs public in library modules — leaking implementation couples features; use api vs implementation Gradle deps correctly.",
+        "hi": "Kotlin default final — extend karne ke liye open. Java opposite tha — interview difference bolo.\n\ninternal same module tak — multi-module app mein impl chhupao, interface bahar public.\n\nFeature module ko internal Room DAO direct na mile — sirf Repository contract dikhe.\n\nprotected inheritance ke liye; zyada tar composition prefer Android mein.\n\nGradle api vs implementation ke saath internal visibility mil kar boundary banate hain."
       },
       {
         "q": "companion object and @JvmStatic",
-        "en": "Companion is class-scoped singleton. @JvmStatic exposes true static methods to Java.",
-        "hi": "Java static jaisa factory/constants; interop ke liye JvmStatic."
+        "en": "companion object is singleton tied to class — like Java static nested holder. Access via ClassName.method without instance. Use for factory methods, Intent extras keys, const-like grouped values.\n\n@JvmStatic exposes true static methods/fields to Java callers — without it Java must call ClassName.Companion.method(). Important for Java Activities calling Kotlin utils.\n\n@JvmField exposes property as public field to Java. @JvmOverloads generates overloads for default parameters for Java.\n\nAndroid examples: Fragment newInstance(args) in companion; Room TypeConverters companion; Notification channel IDs in companion object.\n\nAvoid heavy init in companion — runs on first class touch. Prefer Hilt for DI over companion service locator anti-pattern.",
+        "hi": "companion object class ke saath singleton — factory newInstance(), EXTRA constants yahan.\n\n@JvmStatic Java se direct static call — purane Java Activities Kotlin util call karte waqt zaroori.\n\nJava interop: @JvmOverloads default params, @JvmField field access.\n\nIntent extras KEY_USER_ID companion mein rakho — typo kam.\n\nAnti-pattern: companion se getInstance() service locator — Hilt better production mein."
       },
       {
         "q": "Flow vs LiveData vs RxJava",
-        "en": "Flow: coroutine streams with operators. LiveData: lifecycle-aware. RxJava powerful but verbose; many apps use Flow now.",
-        "hi": "StateFlow UI state; SharedFlow one-time events; LiveData simple legacy UI."
+        "en": "LiveData is lifecycle-aware, main-thread focused, single active observer semantics — simple UI binding but limited operators, no coroutine-native backpressure, awkward for one-shot events without SingleLiveEvent hacks.\n\nFlow is cold by default — collector starts producer; hot StateFlow/SharedFlow for UI state. Rich operators map, combine, debounce; integrates with coroutines and Room return types.\n\nStateFlow: always has value, conflated — perfect for screen state (loading, list). SharedFlow: no initial value, configurable replay — use for snackbar/navigation events with extraBufferCapacity or Channel.\n\nRxJava: mature, powerful schedulers — legacy codebases still use it; new Android work prefers Flow unless team invested in Rx.\n\nMigration path: LiveData.asFlow(), stateIn/shareIn; repeatOnLifecycle(STARTED) { vm.state.collect { render(it) } } — avoids leaking when STOPPED.",
+        "hi": "LiveData lifecycle-aware simple — purane projects mein common. Event ke liye SingleLiveEvent hack awkward.\n\nFlow coroutine native — Room Flow, Retrofit suspend ke saath natural. StateFlow UI state SSOT.\n\nSharedFlow one-time navigation/snackbar — replay 0 ya Channel.TICKET pattern rotation double-fire fix.\n\nRxJava purane code mein — naya code Flow unless team Rx expert.\n\nrepeatOnLifecycle STARTED par collect — background leak nahi jab screen background."
       },
       {
         "q": "suspend function under the hood",
-        "en": "Compiler CPS state machine; thread freed at suspension; resumes on correct dispatcher.",
-        "hi": "suspend = callback transform; withContext dispatcher switch."
+        "en": "Compiler transforms suspend functions via CPS (continuation-passing style) state machine — each suspension point is a label; local vars stored in state object. No thread blocked at suspend — continuation resumes later on appropriate dispatcher.\n\nContinuation interface carries coroutine context, resumeWith result. withContext, delay, Retrofit suspend all suspend at suspension points.\n\nCancellation cooperative — check isActive, use cancellable suspending calls; Room/OkHttp respect cancellation when scope cancelled.\n\nDebugging: stack traces show state machine frames — enable coroutine debug probes in dev. Performance: suspend cheaper than thread for I/O-bound Android work.\n\nInterview contrast: callback hell vs suspend sequential code reads synchronously but behaves asynchronously — same Razorpay verify flow readable top-to-bottom.",
+        "hi": "suspend compiler state machine banata hai — har await point par thread free. Continuation resume par wapas continue.\n\nThread block nahi hota — IO wait par pool thread doosre coroutines chala sakta hai.\n\nCancellation cooperative — viewModelScope cancel par network call abort honi chahiye OkHttp/Retrofit support.\n\nUnder hood bytecode complex — interview mein concept bolo, har opcode nahi.\n\nReadable code: val order = api.createOrder(); val pay = razorpay.checkout(); verify(order.id) — sequential style."
       },
       {
         "q": "init block vs constructors",
-        "en": "Primary constructor in header; init for setup; secondary must delegate this(). Prefer defaults over many constructors.",
-        "hi": "init validation; default params ek constructor enough."
+        "en": "Primary constructor declared in class header — concise for data classes and DI @Inject constructor. init blocks run after primary constructor — validation, logging, register listeners.\n\nSecondary constructors must delegate this(...) to primary — use when Java-style multiple constructors needed; prefer default parameters and @JvmOverloads instead.\n\nOrder: primary constructor params → property init → init blocks → secondary constructors. superclass constructor runs first in inheritance chain.\n\nAndroid: Fragment requires no-arg constructor for system restore — inject via Hilt @AndroidEntryPoint not constructor params on Fragment. ViewModel gets params via SavedStateHandle or AssistedInject.\n\nAnti-pattern: heavy work in init — delays object creation; inject Lazy or coroutine startup instead.",
+        "hi": "Primary constructor header mein — Hilt @Inject yahi. init block validation — require(userId.isNotBlank()).\n\nSecondary constructor kam use — default params zyada Kotlin idiomatic.\n\nFragment system restore no-arg constructor chahta hai — constructor inject Fragment par mat.\n\nViewModel AssistedInject ya SavedStateHandle se orderId lo.\n\ninit mein network call mat — object create slow + test mushkil."
       },
       {
         "q": "enum class vs sealed class for UI state",
-        "en": "enum fixed constants; sealed carries per-state data and exhaustive when.",
-        "hi": "Error(message) sealed mein easy; BLoC/MVVM state machines ke liye sealed best."
+        "en": "enum class: fixed set of singleton constants — no per-instance data except overridden properties. Good for status codes, day-of-week, simple toggles.\n\nsealed class: hierarchy of types, each can hold different data — Success(orders: List<Order>), Error(code: Int, msg: String). when branch exhaustive without else.\n\nUI state machines in MVVM/BLoC almost always sealed — enum cannot carry list + error metadata cleanly without parallel maps.\n\nCompose: when(state) { is UiState.Loading -> Shimmer; is Success -> List } — compiler ensures new state added gets handled.\n\nRoom/API mapping: enum with @TypeConverter for DB; sealed for presentation layer only — don't persist sealed directly without serialization strategy.",
+        "hi": "enum fixed constants — PaymentStatus.PENDING jaisa simple. Har case same shape.\n\nsealed alag data — Error(message, retryable) vs Success(data). UI state ke liye sealed best.\n\nwhen exhaustive — naya state add kiya compile error until handle karo.\n\nenum DB mein TypeConverter se; sealed presentation layer.\n\nInterview: Loading object vs data class Loading(progress: Float) — sealed flexible."
       },
       {
         "q": "Delegation: by lazy, class delegation",
-        "en": "by lazy deferred init; class delegation implements interface by forwarding.",
-        "hi": "by viewModels() delegation; interface Repo by impl forward."
+        "en": "Property delegation by lazy, by viewModels(), by activityViewModels(), by navArgs() — Kotlin stdlib and Android KTX hide boilerplate. lazy defers init; viewModels() scopes to owner.\n\nClass delegation implements interface by forwarding to inner object: class RepoImpl(private val api: Api) : Repo by api — override only what differs.\n\nManual delegation pattern in Clean Architecture — domain interface, data layer delegates to remote/local with policy.\n\nHilt doesn't replace delegation — complements constructor inject. Fragment by viewModels { factory } for parameterized VM.\n\nInterview: difference delegation vs inheritance — favor has-a over is-a; test by swapping delegate fake.",
+        "hi": "by lazy, by viewModels() property delegation — boilerplate kam. Fragment mein viewModels() standard.\n\nClass delegation interface forward — Repo by apiRemote with cache override alag method.\n\nInheritance se zyada flexible — delegate swap test double se.\n\nnavArgs() Safe Args delegation — deep link args type-safe.\n\nManual delegate object bhi bana sakte ho — senior pattern Clean Architecture mein."
       },
       {
         "q": "Platform types from Java",
-        "en": "Java without nullability becomes String! — treat as nullable defensively.",
-        "hi": "Android SDK Java APIs par safe call ya null check."
+        "en": "When Kotlin calls Java without @Nullable/@NonNull (JetBrains or AndroidX annotations), types become T! — unknown nullability. Compiler allows both nullable and non-null usage — NPE risk at runtime if Java returns null.\n\nAndroid SDK, older libraries, JSONObject — many platform types. Defensive: treat as nullable, use ?. and ?:, or requireNotNull with clear message after known non-null API contract.\n\nGradual fix: annotate Java with @NonNull/@Nullable; migrate to Kotlin. AndroidX increasingly annotated.\n\nRoom and Retrofit Kotlin models should not assume Java interop null safety — map platform String! to String? in boundary layer.\n\nInterview example: intent.getStringExtra(KEY) — nullable; never !! without check — process death empty extras crash.",
+        "hi": "Java se aaya type String! — null ho bhi sakta hai nahi bhi. Compiler dono allow karta hai — risk tum par.\n\nAndroid SDK purani APIs annotated nahi — safe call use karo. getStringExtra() nullable treat.\n\nJava code annotate karo @Nullable @NonNull — platform type kam.\n\nBoundary layer par Kotlin model strict nullable — andar !! mat.\n\nInterview: Bundle, Intent extras, legacy JSON Java libs — sab platform type examples."
       }
     ]
   },
@@ -166,183 +166,178 @@ const INTERVIEW_QA = [
     "items": [
       {
         "q": "Activity lifecycle (brief)",
-        "en": "onCreate→onStart→onResume (interactive)→onPause→onStop→onDestroy. Save state in ViewModel/SavedStateHandle.",
-        "hi": "Rotation par recreate; ViewModel config change survive karta hai process death alag."
+        "en": "onCreate: inflate UI, bind ViewModel, register observers — one-time setup. onStart/onResume: visible and interactive; start animations, register sensors. onPause: partial overlay (dialog) still visible; stop heavy camera work.\n\nonStop: no longer visible; onDestroy: teardown. onSaveInstanceState bundles lightweight UI state before possible process kill — not large lists or ViewModel replacement.\n\nConfiguration change (rotation): Activity recreates unless configChanges declared — ViewModel survives, Activity does not. Process death: ViewModel gone unless SavedStateHandle + persistence.\n\nModern apps minimize Activity logic — single-activity + Navigation + Compose. Interview tie: Razorpay checkout returns to onResume — refresh payment status from server not trust client alone.",
+        "hi": "onCreate setup — binding, observe. onResume user interact kar sakta hai. onPause dialog ke case mein bhi call hota hai.\n\nRotation par Activity recreate — ViewModel bach jata hai same process mein. Process kill par ViewModel bhi gaya — Room/SavedStateHandle use karo.\n\nonSaveInstanceState scroll position chhota state — poora cart list nahi.\n\nSingle-activity pattern lifecycle simple — fragments/composable handle sub-screens.\n\nPayment flow: checkout se wapas aao to onResume par server verify status — client success fake ho sakta hai."
       },
       {
         "q": "Activity vs Fragment",
-        "en": "Activity is screen entry; Fragment reusable inside activity. Prefer single-activity + Navigation.",
-        "hi": "Fragment tabs/bottom nav; single-activity scalable pattern."
+        "en": "Activity is entry point with window, task stack, and manifest declaration — one screen host in traditional apps. Fragment is reusable UI/controller slice inside Activity — own lifecycle tied to FragmentManager.\n\nSingle-Activity Architecture: one Activity hosts NavHostFragment or Compose NavHost; Fragments/composables swap — shared ViewModel across nav graph scopes possible.\n\nFragment pitfalls: back stack, commitNow vs commit, viewLifecycleOwner for observers (not lifecycleOwner — leak after onDestroyView). DialogFragment for modal flows.\n\nCompose reduces Fragment need but Fragment still common in hybrid apps. Interview: when separate Activity — deep link entry, SDK (Razorpay) requiring Activity context, multi-window rare cases.\n\nZila/ShopKirana pattern: bottom nav tabs as nested graphs, each feature Fragment or composable destination.",
+        "hi": "Activity alag window + task stack entry. Fragment Activity ke andar reusable piece — tabs, master-detail.\n\nSingle-activity + Navigation modern — multiple Activity se deep link/back stack messy kam.\n\nFragment observe karte waqt viewLifecycleOwner use karo — view destroy ke baad leak nahi.\n\nCompose naya UI; purane XML apps Fragment heavy.\n\nSDK payment Activity chahta hai — alag Activity host kabhi zaroori."
       },
       {
         "q": "Explain MVVM in Android",
-        "en": "Model=data/repo; View=UI; ViewModel survives rotation, exposes StateFlow/LiveData. No business logic in View.",
-        "hi": "Repository SSOT; ViewModel API trigger; View observe only."
+        "en": "Model: domain + data (entities, Repository, use cases). View: Activity/Fragment/Compose — renders state, forwards user events only. ViewModel: survives config change, holds UI state, calls Repository, no Android Context leak (use Application in Hilt if needed).\n\nData flow: unidirectional — ViewModel exposes StateFlow<UiState>; View collects with repeatOnLifecycle; events up via method calls or Channel.\n\nRepository is SSOT — ViewModel never talks Retrofit/Room directly in clean setups. Testing: ViewModel with fake Repository on JVM.\n\nNot MVP/MVC: no Presenter interface ceremony; ViewModel lifecycle-aware via scope not View reference.\n\nProduction: e-commerce cart UiState with loading/error/empty; Razorpay trigger from ViewModel, verify on IO, emit PaymentResult sealed state.",
+        "hi": "Model data layer — Room, API. View sirf dikhana + click pass. ViewModel logic + state — rotation survive.\n\nViewModel Context hold mat karo — leak. Hilt se Repository inject.\n\nStateFlow se UI state ek direction — event up, state down.\n\nTest: FakeRepository se ViewModel unit test bina device.\n\nMVVM + Clean Architecture interview mein layer boundaries clear bolo."
       },
       {
         "q": "LiveData vs StateFlow / SharedFlow",
-        "en": "LiveData lifecycle-aware. StateFlow always has value. SharedFlow for one-time events (navigation/toast).",
-        "hi": "State replay navigation bug avoid — events alag channel."
+        "en": "LiveData respects LifecycleOwner — inactive observers don't receive updates; main-thread dispatch built-in. Limitation: no rich operators, sticky replay always, awkward one-shot events (navigation) without workarounds.\n\nStateFlow: hot, always current value, conflated updates — ideal for UiState rendering. Needs lifecycle-aware collection via repeatOnLifecycle — otherwise collector runs when app backgrounded wasting work.\n\nSharedFlow: configurable replay and buffer — replay=0 for events; extraBufferCapacity for fire-and-forget snackbars. collectLatest vs collect matters for rapid emissions.\n\nMigration: LiveData in legacy; greenfield Kotlin uses StateFlow + SharedFlow or Channel.receiveAsFlow for events.\n\nInterview bug: storing navigation event in StateFlow — rotation replays navigation; fix with SharedFlow/Channel consumed once.",
+        "hi": "LiveData lifecycle automatic — band screen par update nahi. Purane code mein common.\n\nStateFlow hamesha value — UI render ke liye. repeatOnLifecycle se collect STARTED par.\n\nSharedFlow snackbar/navigation one-time — replay 0 important.\n\nStateFlow mein navigation event mat — rotate par dubara navigate crash/bug.\n\nRoom + Flow + stateIn ViewModel mein combine pattern modern."
       },
       {
         "q": "Jetpack Compose vs XML",
-        "en": "Compose declarative UI as functions of state. XML imperative layouts. Compose recommended for new UI.",
-        "hi": "Recomposition state change par; remember/mutableStateOf."
+        "en": "Compose: declarative UI as @Composable functions of state — recomposition redraws changed nodes. Less boilerplate than XML + findViewById/ViewBinding; state hoisting drives predictability.\n\nXML: mature tooling, large legacy codebases, predictable performance on low-end devices historically — still valid for maintenance.\n\nCompose interop: AndroidView for MapView/Razorpay SDK; ComposeView in Fragment during migration. Material 3, theming via CompositionLocal.\n\nPitfalls: recomposition storms from unstable params, missing remember, heavy work in composable body. Use LazyColumn keys for list stability.\n\nGoogle recommends Compose for new screens — Strangler pattern screen-by-screen. Flutter experience translates: Widget≈Composable, setState≈mutableStateOf.",
+        "hi": "Compose declarative — state change par UI update. XML imperative purana stack.\n\nNaye screens Compose — purane XML saath ComposeView interop.\n\nremember, derivedStateOf, keys LazyColumn mein performance ke liye.\n\nThird-party SDK XML/AndroidView wrap karna pad sakta hai Razorpay jaisa.\n\nFlutter se aaye ho to Composable = Widget analogy interview mein strong."
       },
       {
         "q": "How does RecyclerView work?",
-        "en": "ViewHolder recycles views; LayoutManager positions; DiffUtil for efficient updates.",
-        "hi": "notifyDataSetChanged slow; ListAdapter+DiffUtil preferred."
+        "en": "Adapter creates/binds ViewHolders; LayoutManager positions items (Linear, Grid, Staggered). ViewHolder recycles views off-screen — setHasStableIds helps animation consistency.\n\nnotifyDataSetChanged() full refresh expensive — causes flicker, loses scroll state. DiffUtil computes minimal insert/remove/move payloads; ListAdapter + AsyncListDiffer on background thread.\n\nItemDecoration for spacing; ItemAnimator for changes. ConcatAdapter merges multiple adapters (header + list + footer).\n\nPaging 3 integrates via PagingDataAdapter with DiffUtil ItemCallback. Main thread: bind only — image load with Coil/Glide async.\n\nInterview: DiffUtil areItemsSame (id) vs areContentsSame (all fields) — wrong impl causes wrong animations or stale UI in product catalog.",
+        "hi": "ViewHolder recycle — memory efficient lambi list. LayoutManager layout decide.\n\nnotifyDataSetChanged() slow — DiffUtil/ListAdapter use karo ShopKirana product list jaisa.\n\nareItemsSame product id; areContentsSame price/stock compare.\n\nImage load bind mein sync mat — Coil async.\n\nConcatAdapter header + products ek RecyclerView mein."
       },
       {
         "q": "Explain Room Database",
-        "en": "SQLite abstraction: Entity, Dao, Database. Flow support, migrations, compile-time SQL checks.",
-        "hi": "Offline cache; Repository Room+network combine."
+        "en": "Room wraps SQLite with compile-time SQL verification — @Entity, @Dao, @Database. DAO methods return suspend, Flow, or LiveData for reactive UI.\n\nMigrations: export schema JSON, Migration objects for ALTER TABLE — fallbackToDestructiveMigration only dev. TypeConverters for Date, enum, List JSON.\n\nRelations: @Relation, @Embedded, junction tables for many-to-many. FTS for search. With Paging 3 PagingSource from DAO query.\n\nRepository pattern: network fetch updates Room; UI observes Flow — offline-first Zila catalog. Transactions @Transaction for atomic cart updates.\n\nTesting: in-memory Room.databaseBuilder context, allowMainThreadQueries for unit tests only. WAL mode default performance benefit mention.",
+        "hi": "Room SQLite abstraction — compile time SQL check. Entity table, Dao queries, Database holder.\n\nFlow return karke UI auto update — offline cart cache.\n\nMigration production mein zaroori — destructive sirf debug.\n\n@Transaction cart clear + order insert atomic.\n\nTypeConverter enum status, Date store karna."
       },
       {
         "q": "What is ANR and how to avoid?",
-        "en": "Main thread blocked ~5s. Use IO dispatcher, WorkManager, optimize UI work.",
-        "hi": "Network/DB main thread par mat karo; StrictMode debug help."
+        "en": "ANR (Application Not Responding) when main thread blocked ~5 seconds — input dispatch or BroadcastReceiver timeout. System shows dialog; repeated ANRs hurt Play vitals.\n\nCauses: network/DB on Main, heavy JSON parse, synchronous bitmap decode, lock contention, main thread waiting on background CountDownLatch anti-pattern.\n\nFix: coroutines with IO dispatcher, WorkManager for deferrable work, StrictMode in debug, Baseline Profiles for startup. Trace with Android Studio Profiler / Systrace.\n\nBroadcastReceiver: goAsync or JobIntentService/WorkManager for heavy work — onReceive must finish quickly.\n\nInterview: mention Play Console ANR rate; eNagarpalika heavy forms — validate off main, show progress.",
+        "hi": "Main thread 5 sec block — ANR dialog. User experience kharab, Play vitals down.\n\nNetwork, Room, bada JSON Main par mat. Coroutine IO use karo.\n\nStrictMode debug mein disk/network main detect.\n\nBitmap decode background — Glide handle karta hai.\n\nonReceive mein lambi kaam mat — WorkManager enqueue."
       },
       {
         "q": "Four Android app components",
-        "en": "Activity, Service, BroadcastReceiver, ContentProvider. Intents for navigation; WorkManager for deferrable work.",
-        "hi": "Foreground service notification mandatory; background limits Android 8+."
+        "en": "Activity: UI entry, user interaction. Service: background work without UI — foreground service needs visible notification + type declaration Android 14+.\n\nBroadcastReceiver: system/app events (BOOT, CONNECTIVITY) — manifest vs runtime registered; exported receivers security risk, restrict exported=false.\n\nContentProvider: structured data sharing cross-app — Contacts, FileProvider for camera URI sharing. Less common in app-only architecture.\n\nNavigation modern stack de-emphasizes multiple Activities; WorkManager replaces many IntentService patterns. Interview map: FCM → FirebaseMessagingService; payment → Activity; sync → WorkManager.",
+        "hi": "Activity UI screen. Service background — FGS notification mandatory ab.\n\nBroadcastReceiver system events — exported false jahan possible security.\n\nContentProvider data share — FileProvider camera capture ke liye common.\n\nPurana IntentService ki jagah WorkManager.\n\nComponents manifest declare — deep link Activity intent-filter."
       },
       {
         "q": "Dagger Hilt — why use it?",
-        "en": "DI with scoped dependencies Singleton/ViewModel; easier testing with fake modules.",
-        "hi": "Constructor @Inject; wrong scope leak/crash."
+        "en": "Compile-time DI graph — @Inject constructors, @Module @Provides for interfaces, @HiltAndroidApp Application entry. Scopes: @Singleton app-wide, @ViewModelScoped, @ActivityScoped — wrong scope causes leak or new instance per injection unexpectedly.\n\nTesting: @TestInstallIn replace modules with fakes — FakePaymentGateway, in-memory Room. No manual ServiceLocator.\n\nHilt integrates AndroidX: @HiltViewModel, @AndroidEntryPoint Activities/Fragments. Generates code KSP/apt — build time cost acceptable for large teams.\n\nvs Koin: Hilt compile-time safety, better for enterprise gov/fintech compliance traceability.\n\nInterview: explain component hierarchy SingletonComponent → ActivityRetainedComponent → ViewModelComponent; never inject Activity into Singleton.",
+        "hi": "Hilt compile time DI — @Inject constructor, modules interfaces ke liye. Scope galat = leak ya crash.\n\nViewModel @HiltViewModel — factory manual nahi. Fragment @AndroidEntryPoint.\n\nTest mein fake module swap — payment/Room mock.\n\nSingleton mein Activity Context mat inject — ApplicationContext theming ke case mein.\n\nShopKirana scale par manual new Repo() chaos — Hilt standard."
       },
       {
         "q": "Memory leaks — common causes",
-        "en": "Static Activity ref, listeners not removed, coroutines without scope. Use viewModelScope, lifecycle-aware APIs.",
-        "hi": "LeakCanary debug; Handler delayed message leak classic."
+        "en": "Static or singleton holding Activity/Fragment/View context — survives rotation. Anonymous inner classes capturing outer Activity in long-lived callbacks.\n\nCoroutines GlobalScope or scope without lifecycle — job outlives UI. Listeners not unregistered — LocationManager, SensorManager, custom event bus.\n\nHandler postDelayed with Activity Runnable — use WeakReference or cancel on destroy. LiveData observing with wrong LifecycleOwner (fragment vs view).\n\nTools: LeakCanary detects retained objects; Profiler heap dump. Fix patterns: ApplicationContext only where no UI needed, viewLifecycleOwner, viewModelScope.\n\nCompose: remember NavController with correct scope; don't hold Context in remember without DisposableEffect cleanup.",
+        "hi": "Static Activity reference classic leak — rotation ke baad purani Activity memory mein.\n\nGlobalScope coroutine screen band hone ke baad bhi chale — viewModelScope use karo.\n\nListener unregister onDestroy — location, download callback.\n\nLeakCanary debug build mein lagao — interview tool naam.\n\nHandler delayed runnable Activity capture — WeakReference ya cancel."
       },
       {
         "q": "Architecture layers UI to Data",
-        "en": "UI→ViewModel→(UseCase)→Repository→API/Room. Dependencies point inward.",
-        "hi": "Clean Architecture testable domain; aapke CV pattern match."
+        "en": "Presentation: UI + ViewModel — platform-specific. Domain (optional): use cases, pure Kotlin business rules — testable without Android. Data: Repository impl, remote/local data sources, DTO mapping.\n\nDependency rule: inner layers don't know outer — Domain no Android imports; Data implements domain interfaces.\n\nSingle Repository coordinates API + Room + DataStore preferences. Mapper converts DTO ↔ Entity ↔ Domain model if strict layering.\n\nFeature modules depend on :core:domain, not each other's internals. MP eNagarpalika/gov apps benefit auditability.\n\nInterview draw: UI → VM → Repo → {Retrofit, Room}; mention trade-off — small app may skip domain layer pragmatism.",
+        "hi": "UI/ViewModel presentation. Domain business rules optional par badi team mein useful. Data API+DB.\n\nAndar wale layer ko bahar pata nahi — test easy.\n\nRepository SSOT — duplicate cache UI mein mat.\n\nDTo alag Entity alag — mapping layer clean.\n\nChhota app pragmatism; bada org Clean Architecture justify."
       },
       {
         "q": "Retrofit + OkHttp together",
-        "en": "Retrofit maps API interfaces; OkHttp executes HTTP, interceptors, timeouts, logging.",
-        "hi": "Auth interceptor chain; suspend Retrofit functions."
+        "en": "Retrofit: declarative API interfaces, converters (Gson/Moshi/kotlinx.serialization), Call/suspend/Flow adapters. OkHttp: actual HTTP client — connection pool, interceptors, caching, TLS.\n\nInterceptor chain: logging (debug only), auth token refresh, header injection, retry with backoff. Certificate pinning via OkHttp CertificatePinner for fintech.\n\nTimeouts connect/read/write configured on OkHttpClient.Builder. Single client instance @Singleton — shares pool.\n\nError handling: HttpException for 4xx/5xx; map to domain NetworkError in Repository. kotlinx.serialization or Moshi codegen over Gson for Kotlin null safety.\n\nOffline: Room cache + networkBoundResource pattern or manual fetch-then-save; don't call Retrofit on Main.",
+        "hi": "Retrofit API interface define — suspend functions clean. OkHttp neeche HTTP engine.\n\nInterceptor auth token attach, 401 par refresh retry chain.\n\nOkHttpClient singleton — har call naya client mat banao.\n\nRelease mein body logging band — PII leak.\n\nError map karke UiState.Error user friendly message."
       },
       {
         "q": "ViewBinding vs DataBinding",
-        "en": "ViewBinding type-safe views. DataBinding also binds observables in XML — heavier.",
-        "hi": "findViewById avoid; Compose age par kam binding."
+        "en": "ViewBinding generates type-safe binding class per layout — no findViewById, null-safe views after inflate. compile-time linkage layout ↔ binding.\n\nDataBinding adds observables in XML ({viewmodel.title}) — two-way binding, BindingAdapter custom attrs. Heavier build, harder debug, mixes logic in XML — many teams avoid for new code.\n\nCompose makes both less central for new UI. ViewBinding still common in XML Fragments.\n\ninclude/merge tags need correct binding root; viewBinding enabled in module build.gradle. Null binding in Fragment after onDestroyView — clear reference.\n\nInterview: prefer ViewBinding + manual state update or Compose; DataBinding when legacy or designer-driven binding already invested.",
+        "hi": "ViewBinding type-safe inflate — findViewById khatam. Fragment binding nullable onDestroyView par.\n\nDataBinding XML mein expression — ObservableField verbose, build slow.\n\nNaya UI Compose; XML maintain ViewBinding enough.\n\ninclude tag binding root sahi naming.\n\nDataBinding test mushkil — ViewBinding simple preferred."
       },
       {
         "q": "Intent, PendingIntent, deep links",
-        "en": "Intent starts/shares; PendingIntent for notifications/alarms; App Links verified URLs.",
-        "hi": "Notification tap PendingIntent; Dynamic Links specific screen."
+        "en": "Explicit Intent: known component (Activity class) — internal navigation. Implicit: action/category — share sheet, dial. Intent extras pass primitives, Parcelable — size limits apply.\n\nPendingIntent: token another app/system executes later with your identity — notifications, AlarmManager, widgets. Mutability flags Android 12+ — FLAG_IMMUTABLE default requirement.\n\nDeep links: intent-filter VIEW + https host; App Links auto-verify assetlinks.json. Navigation Component deep link matches nav graph routes.\n\nSecurity: don't put secrets in Intent extras (loggable); validate incoming deep link params. Notification tap PendingIntent to correct Activity with back stack via TaskStackBuilder.\n\nFCM notification payload opens PendingIntent to order detail — orderId extra validated server-side exists.",
+        "hi": "Intent screen/component start — explicit internal navigation. Implicit share, browser.\n\nPendingIntent notification/alarm — system baad mein tumhari tarah open kare.\n\nDeep link https scheme + App Links verify — marketing link se product open.\n\nAndroid 12 PendingIntent immutable flag zaroori warna crash.\n\nExtras mein sensitive token mat — log expose ho sakta hai."
       },
       {
         "q": "Foreground vs Background services",
-        "en": "Background restricted; use WorkManager or FGS with visible notification and declared type.",
-        "hi": "GPS tracking FGS location type; battery policy follow."
+        "en": "Background Service restrictions from Android 8+ — limited idle background execution. Prefer WorkManager for deferrable tasks; Foreground Service (FGS) for user-visible ongoing work.\n\nFGS must show notification within timeout; declare foregroundServiceType in manifest (location, dataSync, mediaPlayback, etc.) Android 14+ enforcement.\n\nUse cases: live delivery tracking, music playback, ongoing upload user aware of. Misuse triggers Play policy rejection.\n\nJobIntentService deprecated path — WorkManager replaces. Coroutine + FGS for long download user initiated.\n\nInterview: SK Agent field app GPS sync — FGS location type with clear UX why notification shown.",
+        "hi": "Background service band almost — WorkManager deferrable ke liye.\n\nFGS user ko pata ongoing kaam — notification compulsory. Type manifest mein declare.\n\nGalat FGS use Play reject — policy padho.\n\nMusic, navigation, upload user visible — FGS sahi.\n\nChhupa background work WorkManager + constraints charging/WiFi."
       },
       {
         "q": "What is WorkManager?",
-        "en": "Guaranteed deferrable background work with constraints; survives restarts.",
-        "hi": "Sync queue; periodic cleanup; FCM background work enqueue."
+        "en": "Jetpack API for guaranteed deferrable background work — survives process death, reboot. Constraints: network, charging, storage not low. Backoff policy retry on failure.\n\nOneTimeWorkRequest vs PeriodicWorkRequest (minimum 15 min interval). Unique work names REPLACE/KEEP/APPEND dedupe sync jobs.\n\nCoroutineWorker preferred over Worker for suspend code. HiltWorkerFactory inject dependencies into workers.\n\nUse: catalog sync, analytics batch upload, cleanup temp files. Not for instant UI-critical path — too latency. Combine with FCM high-priority push for urgent.\n\nChain work: beginUniqueWork then combine for pipeline. Observe WorkInfo LiveData/Flow for UI progress badge optional.",
+        "hi": "WorkManager guaranteed background — app band/reboot ke baad bhi run attempt.\n\nConstraints network/charging — battery friendly sync.\n\nCoroutineWorker suspend Room/API call clean.\n\nPeriodic 15 min minimum — har second poll ke liye nahi.\n\nFCM urgent + WorkManager routine sync combo production mein."
       },
       {
         "q": "FCM push notification flow",
-        "en": "Token to server; server sends FCM; FirebaseMessagingService handles. Channels Android 8+; permission Android 13+.",
-        "hi": "Data vs notification message; token refresh server update."
+        "en": "Client gets FCM token via FirebaseMessaging.getToken() — send to your backend on login/refresh. Server calls FCM HTTP v1 API with service account — notification vs data payload.\n\nNotification message: system tray when app background; data-only handled in FirebaseMessagingService.onMessageReceived always when app foreground/background depending config.\n\nChannels required Android 8+ — separate ORDER_UPDATES vs PROMO. Android 13+ POST_NOTIFICATIONS runtime permission.\n\nToken refresh onNewToken — update server. Deep link from notification PendingIntent. Doze: high-priority FCM for time-sensitive; normal may delay.\n\nInterview architecture: server authoritative order status; push triggers local Room refresh WorkManager enqueue.",
+        "hi": "FCM token backend ko bhejo login par — refresh par update.\n\nNotification tray message vs data payload — data custom handle onMessageReceived.\n\nChannel create Android 8+ — promo aur order alag.\n\nAndroid 13 notification permission runtime — deny handle karo.\n\nPush aaya to WorkManager se catalog sync — UI Flow update."
       },
       {
         "q": "ProGuard / R8",
-        "en": "Shrink, obfuscate, optimize APK. Keep rules for Gson/Retrofit/Hilt. Test release minify.",
-        "hi": "Missing keep rules → Gson crash; mapping file deobfuscate."
+        "en": "R8 (default) shrinks unused code, obfuscates names, optimizes bytecode — smaller APK/AAB, harder reverse engineering. Runs on release minifyEnabled true.\n\nReflection-heavy libs need -keep rules: Gson/Moshi model fields, Retrofit interfaces, Hilt generated, Parcelable CREATOR, Room entities. Missing rules → ClassNotFoundException or empty JSON parse in production only.\n\nTest release builds on CI — debug hides issues. mapping.txt upload Crashlytics for deobfuscated stack traces.\n\nConsumer proguard rules from libraries merge automatically. Don't keep entire packages blindly — bloat defeats shrink.\n\nInterview: Razorpay/Gson model keep; verify minified release before Play upload; mention Play App Signing.",
+        "hi": "R8 release par code shrink + obfuscate — chhota APK, reverse engineering mushkil.\n\nGson/Retrofit/Hilt keep rules zaroori — warna production crash debug mein nahi dikhega.\n\nRelease build test CI par mandatory habit bolo.\n\nmapping.txt Crashlytics upload — stack trace readable.\n\nPoori package keep mat — size badhega."
       },
       {
         "q": "Security — storing tokens",
-        "en": "EncryptedSharedPreferences/Keystore; HTTPS; no plain secrets in APK; verify payments server-side.",
-        "hi": "Razorpay server verify mandatory; root par data risk."
+        "en": "Never store auth tokens, refresh tokens, or PII in plain SharedPreferences or logs. Use EncryptedSharedPreferences or Android Keystore-backed encryption — keys in hardware when available.\n\nHTTPS only; certificate pinning for high-risk apps. No secrets in APK — assume decompilation. API keys restricted by package signature + Play Integrity.\n\nPayment: Razorpay order created server-side; client gets order_id; payment signature verified server-side before marking paid — client tampering irrelevant if server authoritative.\n\nRoot/jailbreak detection optional layer not sole security. OWASP MASVS mindset for gov/fintech eNagarpalika.\n\nLogout: clear encrypted prefs, cancel tokens server-side, wipe Room user tables.",
+        "hi": "Token plain SharedPreferences mein mat — EncryptedSharedPreferences / Keystore.\n\nAPK se secret nikal sakte hain — server-side secrets.\n\nRazorpay verify server par — client success UI tabhi jab API confirm.\n\nLog mein token/PII mat — Timber release tree filter.\n\nLogout par local DB user data clear + token revoke API."
       },
       {
         "q": "Unit vs Instrumentation tests",
-        "en": "Unit: JVM ViewModel/repo with mocks. Instrumentation: device UI Espresso/Compose test.",
-        "hi": "Pyramid — zyada unit, kam UI; runTest coroutines."
+        "en": "Unit tests JVM-local — ViewModel, Repository with fakes, mappers, use cases. Fast, no emulator. runTest for coroutines; Turbine for Flow assertions; MockK/Mockito for mocks.\n\nInstrumentation/Android tests on device/emulator — Espresso UI clicks, Compose UI Test, Room migration tests with real SQLite, Hilt test modules @HiltAndroidTest.\n\nPyramid: many unit, fewer integration, minimal E2E — CI runs unit on every PR. Flaky UI tests isolated nightly.\n\nRobolectric optional middle ground — slower, some API fakes. Test payment flow with fake gateway interface not real Razorpay in CI.\n\nInterview: what you'd test in Zila checkout ViewModel — cart total calc, error mapping, loading states — not pixel colors.",
+        "hi": "Unit test fast JVM — ViewModel + FakeRepo. runTest coroutine time control.\n\nInstrumentation device par — Espresso/Compose UI, navigation flow.\n\nZyada unit kam UI — CI PR par unit mandatory.\n\nTurbine Flow emit test — Loading then Success order.\n\nReal Razorpay CI mat — interface fake inject Hilt test module."
       },
       {
         "q": "DiffUtil and ListAdapter",
-        "en": "DiffUtil minimal list updates; ListAdapter wraps DiffUtil in Adapter.",
-        "hi": "areItemsSame/areContentsSame implement karo."
+        "en": "DiffUtil compares old vs new list on background — produces minimal update ops. areItemsSame: identity (id); areContentsSame: full equality for bind optimization.\n\nListAdapter wraps AsyncListDiffer — submitList triggers diff on background, dispatches to main. Never mutate list in place after submit — new immutable list instance.\n\nStable IDs setHasStableIds(true) when ids stable — smoother animations. Payloads partial bind optional advanced.\n\nPagingDataAdapter same DiffUtil callback for paged catalog. Wrong areContentsSame → price change not reflected in ViewHolder.\n\nWith Compose LazyColumn use key = { item.id } analogous concept.",
+        "hi": "DiffUtil purani nayi list compare — sirf change update. notifyDataSetChanged() se better.\n\nareItemsSame id same hai? areContentsSame content same?\n\nsubmitList naya list instance — purani list mutate mat.\n\nPrice update areContentsSame false hona chahiye warna UI purana dikhega.\n\nCompose mein LazyColumn key = id same idea."
       },
       {
         "q": "Process death and state restoration",
-        "en": "System kills process; use SavedStateHandle, persistence, not static Activity fields.",
-        "hi": "ViewModel bhi process death par clear; Room important data."
+        "en": "Low memory kills entire process — all statics, in-memory ViewModel, Activity fields gone. User returns via recents — app cold start with saved task state illusion.\n\nSavedStateHandle for nav args + small state survives process death via Bundle. ViewModel not surviving process death — persist critical data Room/DataStore.\n\nDon't rely static var userId or lateinit without re-init. Test: adb shell am kill package — reproduce.\n\nCompose rememberSaveable for UI-local state. Checkout in-progress payment — server order id in DB before opening Razorpay so resume can poll status.\n\nInterview classic bug: cart only in memory — process death empty cart; fix offline Room cart SSOT.",
+        "hi": "System memory kam process kill — ViewModel bhi gaya. Static field bhi clear.\n\nSavedStateHandle chhota state — bada data Room mein persist.\n\nadb am kill se test karo process death — interview tip.\n\nPayment orderId pehle server+DB save phir checkout open.\n\nCart sirf memory mein mat — Room SSOT offline-first."
       },
       {
         "q": "SharedPreferences vs DataStore",
-        "en": "DataStore async and safer; SharedPreferences sync pitfalls. Encrypted for secrets.",
-        "hi": "Preferences DataStore migration; sensitive Keystore."
+        "en": "SharedPreferences synchronous API on main can cause ANR on large commits; no transactional coroutine API; type safety manual.\n\nPreferences DataStore: async Flow-based, handles corruption better, transactional edits edit { prefs -> }. Proto DataStore for typed schema.\n\nMigrate SharedPreferences via DataStore migration helper. Sensitive tokens EncryptedSharedPreferences or encrypted DataStore — not plain either.\n\nUse for: onboarding flags, last sync timestamp, theme pref. Not for large datasets — Room instead.\n\nInterview: DataStore collect in ViewModel startup; avoid runBlocking get on main.",
+        "hi": "SharedPreferences purana — main thread ANR risk bade commit par.\n\nDataStore async Flow — onboarding done flag, theme setting.\n\nSensitive data encrypted variant — plain DataStore bhi token ke liye nahi.\n\nBada data Room — prefs chhota config ke liye.\n\nMigration helper se SharedPreferences se shift gradual."
       },
       {
         "q": "Navigation Component benefits",
-        "en": "Nav graph, Safe Args, deep links, consistent back stack. Navigation Compose available.",
-        "hi": "Manual FragmentTransaction bugs kam; go_router Flutter parallel."
+        "en": "Nav graph XML/ Kotlin DSL centralizes destinations, actions, args — Safe Args generates type-safe directions. Deep links declared in graph match URLs to destinations.\n\nSingle Activity back stack managed by NavController — consistent Up/back. Nested graphs for bottom nav tabs — each tab own stack.\n\nNavigation Compose: NavHost, composable routes, same deep link model. ViewModel scoped to nav graph via hiltNavGraphViewModels.\n\nAvoid manual FragmentTransaction tag bugs, wrong popBackStack. Test Navigation with TestNavHostController.\n\nFlutter parallel: go_router — interview cross-platform teams mention similar declarative routing.",
+        "hi": "Nav graph ek jagah screens + actions — Safe Args type-safe bundle.\n\nDeep link graph mein define — product/:id open ProductFragment.\n\nBottom nav nested graph — har tab alag back stack.\n\nManual FragmentTransaction error kam — NavController standard.\n\nCompose Navigation same concept NavHost."
       },
       {
         "q": "Razorpay payment integration (high level)",
-        "en": "Server creates order; client checkout; verify signature on server; handle failure/retry.",
-        "hi": "Client-only trust mat karo; activity recreate state handle."
+        "en": "Server creates order with amount/currency/receipt — returns order_id to app. Client opens Razorpay Checkout with key_id (public), order_id, prefill optional.\n\nOn success/failure callback get payment_id, order_id, signature — send to server verify endpoint using Razorpay secret — never trust client-only success.\n\nHandle Activity recreation during checkout — retain order_id in ViewModel/SavedStateHandle. Network failure after pay — poll server status idempotently.\n\nUPI/card failures map to user-friendly UiState; retry without duplicate charge via same server order if unpaid.\n\nTesting: sandbox keys; mock PaymentResult sealed states in ViewModel unit tests.",
+        "hi": "Server order create — amount server decide client tamper nahi. order_id app ko mile.\n\nRazorpay Checkout open — success par signature server verify mandatory.\n\nActivity recreate checkout ke dauran — orderId ViewModel mein save.\n\nDouble charge rokne idempotency server order id same retry.\n\nSandbox test keys production alag — BuildConfig flavor se."
       },
       {
         "q": "BLoC vs MVVM",
-        "en": "BLoC: events in, states out via streams. MVVM: ViewModel observables. Both separate UI logic.",
-        "hi": "Flutter BLoC; Android MVVM+StateFlow similar goals."
+        "en": "BLoC (Flutter origin): Events sink, States stream out — strict unidirectional, often multiple streams. Android adoption via MVI-like patterns.\n\nMVVM: ViewModel exposes state observables; View calls methods. Simpler mental model for Android teams; StateFlow achieves similar without explicit Event classes for everything.\n\nMVI: single state reduce with intents — immutable state copy. All three separate UI from logic.\n\nChoose by team familiarity — Flutter module BLoC, Android module MVVM+StateFlow in same org is common. Testing similar: feed events/assert states.\n\nInterview: don't religiously debate — show you know one-time events problem exists in both if mis-modeled.",
+        "hi": "BLoC event in state out — Flutter mein common. Android mein MVVM+StateFlow similar goal.\n\nMVVM method call + observe — kam ceremony Android dev ke liye.\n\nDono mein UI logic ViewModel/BLoC mein — Activity thin.\n\nSame org Flutter BLoC + Android MVVM chal sakta hai — shared domain rules.\n\nGalat modeling se dono mein navigation bug — SharedFlow solution."
       },
       {
         "q": "Offline-first architecture",
-        "en": "Show Room cache first; background sync; conflict policy defined. SK Agent offline cart example.",
-        "hi": "UI local Flow observe; network update DB → UI refresh."
+        "en": "UI reads local Room Flow first — instant paint cached catalog/cart. Network sync updates DB in background; UI auto-updates from same Flow — true SSOT.\n\nConflict policy explicit: last-write-wins, server wins, or merge for cart quantities. Show stale indicator if last sync old.\n\nWorkManager periodic sync + pull-to-refresh manual. Field apps SK Agent poor network — queue mutations locally, replay when online with idempotency keys.\n\nNetworkBoundResource pattern (legacy) or manual in Repository: fetchRemote → saveLocal → emit. Don't duplicate list in ViewModel memory.\n\nInterview metrics: time-to-first-content, offline add-to-cart success rate.",
+        "hi": "Pehle Room se dikhao — network background mein sync. Ek hi Flow UI observe.\n\nConflict rule likho — server price update local override.\n\nOffline mutation queue — online aate hi sync WorkManager.\n\nViewModel mein alag list cache mat — duplicate state bug.\n\nSK Agent jaisi field app offline cart critical example."
       },
       {
         "q": "Android 13+ notification permission",
-        "en": "POST_NOTIFICATIONS runtime permission; request in context; handle denial.",
-        "hi": "Promotional vs transactional channels alag strategy."
+        "en": "POST_NOTIFICATIONS runtime permission — must request like camera. Without grant, notification channel posts suppressed (except some exempt cases).\n\nRequest in context when user enables order alerts — not cold start splash. Explain rationale in UI before system dialog.\n\nHandle denial: settings deep link, in-app inbox fallback for order status. FCM still delivers data — you may show in-app banner if no permission.\n\nSeparate channels transactional vs marketing — user may disable promo channel only. Target SDK 33+ required for Play.\n\nInterview UX: e-commerce order shipped — permission prompt after first purchase not install.",
+        "hi": "Android 13 se notification alag permission — POST_NOTIFICATIONS runtime.\n\nPehle apni UI mein kyun chahiye explain phir system dialog.\n\nDeny par settings link + in-app order status screen fallback.\n\nTransactional aur promo channel alag — user promo band kar sake.\n\nInstall par turant permission mat — context ke baad request conversion better."
       },
       {
         "q": "Compose recomposition — avoid pitfalls",
-        "en": "Avoid heavy work in composable; use remember, derivedStateOf, stable keys in LazyColumn.",
-        "hi": "State hoist; immutable state single source."
+        "en": "Recomposition reruns composable when state read during composition changes. Unstable parameters (new lambda/list each call) cause unnecessary recomposition scope.\n\nremember caches across recompositions; derivedStateOf for expensive derived reads; key in LazyColumn items for identity stability.\n\nSide effects: LaunchedEffect(keys) for coroutines; DisposableEffect cleanup. Never heavy DB/network directly in @Composable body — hoist to ViewModel.\n\nSkipping: @Stable/@Immutable annotations; use immutable collections for state. Debugging Layout Inspector recomposition counts.\n\nLists: paging collect in ViewModel stateIn; pass stable list reference updates only when data changes.",
+        "hi": "State change par composable dubara run — unnecessary recomposition performance hit.\n\nremember, derivedStateOf use karo. Lambda har bar naya mat banao without remember.\n\nNetwork/DB composable body mein mat — ViewModel se state.\n\nLazyColumn key = item.id stability ke liye.\n\nLayout Inspector se kaun sa recompose zyada dekh sakte ho debug mein."
       },
       {
         "q": "System design: e-commerce module",
-        "en": "Modules auth/catalog/cart/checkout; Repository; Paging; Razorpay server verify; FCM order status; offline cart policy.",
-        "hi": "Zila jaisa break karo; non-functional latency/error states bolo."
+        "en": "Clarify requirements: catalog browse, cart, checkout, orders, push — NFR latency, offline, payment compliance. Modularize :feature:catalog, :cart, :checkout, :core:data.\n\nData: Room cart/order cache, Retrofit API, Repository SSOT. UI: MVVM/Compose, Navigation nested graphs. Paging 3 for product grid.\n\nCheckout: server order → Razorpay → verify → emit success → FCM order updates. Idempotent placeOrder client request id.\n\nFailure modes: payment pending poll, stale inventory conflict, token expiry re-auth. Observability Crashlytics + analytics funnel drop-off.\n\nScale: CDN images, API pagination, feature flags new payment method rollout.",
+        "hi": "Requirements pehle — catalog, cart, pay, orders. Modules alag feature teams ke liye.\n\nRoom offline + Retrofit sync. Paging catalog lambi list ke liye.\n\nRazorpay flow server verify ke saath — client trust nahi.\n\nFailure: payment pending, out of stock server reject, network retry policy.\n\nZila jaisa project break karke bolo interview mein 2-3 minute design."
       },
       {
         "q": "APK vs AAB?",
-        "en": "AAB is Play upload format; Play serves optimized split APKs per device.",
-        "hi": "Chhota user download; mandatory Play upload format."
-      },
-      {
-        "q": "dp vs px?",
-        "en": "dp density-independent; px physical pixels. Always use dp/sp in UI.",
-        "hi": "Different screens consistent size — dp use."
+        "en": "APK is installable package — single artifact all ABIs/resources unless splits manual. AAB (Android App Bundle) upload format to Play — Google generates optimized split APKs per device config.\n\nBenefits: smaller download (language/density/ABI splits), dynamic feature modules possible, Play signing. Local debug still APK/AAB via Android Studio.\n\nCannot sideload AAB directly to users — bundletool build apks for testing. Enterprise MDM may need universal APK occasionally.\n\nInterview: Play mandatory AAB for new apps; mention app size vitals impact retention.",
+        "hi": "APK direct install file — sab kuch ek bundle mein ho sakta hai bada.\n\nAAB Play ko upload — Google device ke hisaab se chhota APK banata hai split se.\n\nUser ko chhota download — language/ABI sirf jo chahiye.\n\nLocal test bundletool se APK generate. Play Console AAB mandatory practically.\n\nApp size kam retention better — interview metric link."
       },
       {
         "q": "Context types",
-        "en": "Application Context long-lived; Activity Context themed for UI. Avoid Activity leak in singletons.",
-        "hi": "Singleton mein ApplicationContext careful — UI theme nahi."
+        "en": "Application Context: app lifetime, no UI theme — use for singletons needing Context (Room database, Coil image loader config). Cannot start Activity or inflate themed dialogs.\n\nActivity Context: theme, window, token for UI — required for dialogs, toasts with theme, starting activities. Short-lived.\n\nMemory leak when singleton holds Activity Context — rotation keeps dead Activity. Pattern: context.applicationContext when theme not needed.\n\nCompose LocalContext.current — usually Activity; prefer applicationContext in ViewModel never. Hilt @ApplicationContext inject.\n\nInterview: Razorpay needs Activity context for checkout UI — not Application.",
+        "hi": "Application Context poori app life — singleton Room/ImageLoader ke liye. Theme nahi.\n\nActivity Context UI theme ke saath — dialog, start Activity.\n\nSingleton mein Activity Context mat — leak fix ApplicationContext.\n\nViewModel Context hold hi mat karo ideally — event se UI ko bolo.\n\nPayment SDK Activity context maangta hai — Application se fail."
       },
       {
         "q": "Activity launchMode",
-        "en": "standard, singleTop, singleTask, singleInstance control back stack and duplicates.",
-        "hi": "Deep link duplicate activity fix singleTop/Task."
+        "en": "standard: new instance every launch. singleTop: if already top of stack, onNewIntent instead of new instance — deep link duplicate handling.\n\nsingleTask: one instance per task; may clear activities above; own taskAffinity sometimes. singleInstance: alone in task — rare (launcher-like).\n\nManifest launchMode + intent flags FLAG_ACTIVITY_* combine — know CLEAR_TOP, NEW_TASK, SINGLE_TOP for notifications.\n\nModern Navigation reduces launchMode hacks — still needed notification entry, payment return, multi-task edge cases.\n\nInterview bug: multiple LoginActivity stack — fix singleTop + clear back stack on logout NavController popUpTo.",
+        "hi": "standard har bar nayi Activity. singleTop top par hai to reuse onNewIntent.\n\nsingleTask ek task mein ek instance — deep link duplicate fix.\n\nIntent flags bhi stack change karte — notification NEW_TASK.\n\nLogout par login stack clear popUpTo inclusive true.\n\nNav Component ke baad kam use par payment/deep link ab bhi aata hai."
       },
       {
         "q": "Gradle product flavors",
-        "en": "productFlavors dev/prod; buildTypes debug/release; different API URLs per flavor.",
-        "hi": "BuildConfig BASE_URL alag environment."
+        "en": "productFlavors dimension create variants — dev, staging, prod with different applicationIdSuffix, app name, API base URL via BuildConfig fields.\n\nCombine with buildTypes debug/release — devDebug, prodRelease matrices. sourceSets flavor-specific resources/manifest optional.\n\nmanifestPlaceholders, resValue, buildConfigField inject env config. Never commit prod secrets — CI injects signing + API keys.\n\nFlavor matching dependencies rare advanced. Play tracks: internal staging prod rollout per flavor bundle if separate app ids.\n\nInterview: ShopKirana dev points to mock API; prod Razorpay live keys; same codebase Hilt modules bind different base Url @Named qualifier.",
+        "hi": "productFlavors dev/staging/prod — alag BASE_URL BuildConfig mein.\n\napplicationIdSuffix dev par — ek phone par dev+prod dono install.\n\nSecrets CI se inject — git mein prod key mat.\n\nbuildTypes release minify + signing config flavor ke saath combine.\n\nHilt @Named(\"baseUrl\") flavor-specific provide module pattern."
       }
     ]
   },
@@ -353,78 +348,78 @@ const INTERVIEW_QA = [
     "items": [
       {
         "q": "Why DSA for Android interviews?",
-        "en": "Efficient lists, search, caching; Easy-Medium LeetCode plus Android context in answers.",
-        "hi": "O(n) vs O(n²) samajhna — badi list/filter ke liye zaroori."
+        "en": "Mobile apps still process lists, search, filters, caches, and graph-like navigation — algorithmic complexity affects battery and jank on low-end devices. Interviewers test problem-solving plus ability to connect to app context.\n\nExpect Easy–Medium LeetCode patterns: arrays, hash maps, two pointers, BFS/DFS, heaps — not competitive programming extremes unless FAANG mobile.\n\nAndroid tie-in: DiffUtil is DP-like comparison; LruCache is hash + linked list; Paging is batch windowing. Mention threading — heavy DSA off main thread.\n\nCommunication matters: state brute force then optimize; cite time/space complexity clearly.\n\nPractice 50–80 curated problems with patterns rather than random hard grind — quality over quantity for 3–5 YOE Android roles.",
+        "hi": "Android dev ko bhi DSA aana chahiye — badi product list filter/search efficient honi chahiye warna UI slow.\n\nInterview Easy-Medium — Two Sum, sliding window, BFS typical.\n\nApp context jodo: nearest store BFS, top products heap, anagram search filter.\n\nPehle brute force bolo phir optimize — interviewer process dekhta hai.\n\nMain thread par O(n²) mat — background dispatcher mention karo."
       },
       {
         "q": "Two Sum approach",
-        "en": "HashMap complement target-num; one pass O(n) time O(n) space.",
-        "hi": "map[value]=index; brute O(n²) pehle bolo phir optimize."
+        "en": "Brute: nested loops O(n²) find pair summing to target. Optimal: HashMap stores value→index while scanning; for each num check if (target - num) exists — O(n) time O(n) space.\n\nHandle duplicates: same value different indices OK; clarify if reuse same element forbidden.\n\nAndroid analogy: find two products whose prices sum to wallet balance in cart promo engine — map price to product id.\n\nEdge cases: empty array, no solution return empty or -1 per spec, negative numbers work fine.\n\nFollow-up: sorted array two pointers O(1) space; Three Sum extension sort + two pointer for each i.",
+        "hi": "Brute do loop O(n²). Optimized HashMap ek pass — complement target-num map mein hai?\n\nHar element par check karo aur map mein daalo index ke saath.\n\nCart mein do item total target — same pattern interview mein bolo.\n\nDuplicate values allowed alag index par.\n\nSorted ho to two pointers space O(1) bonus."
       },
       {
         "q": "Valid Anagram / frequency counting",
-        "en": "Count chars int[26] or HashMap; compare O(n).",
-        "hi": "Frequency pattern common — groupBy Kotlin."
+        "en": "Compare two strings anagram: count char frequencies int[26] for lowercase English or HashMap for Unicode. Single pass count s++, t-- or count s then compare t.\n\nTime O(n), space O(1) fixed alphabet or O(k) distinct chars.\n\nPattern extends: group anagrams, find all anagrams in string, ransom note.\n\nAndroid: search suggestion normalization, duplicate order line detection by sku multiset.\n\nKotlin: s.groupingBy { it }.eachCount() readable but watch allocations in hot path.",
+        "hi": "Dono string ke char count barabar — anagram. int[26] array ya HashMap frequency.\n\nEk pass count badhao ghatao — end mein sab zero.\n\nPattern bahut common — group anagrams same family.\n\nUnicode ho to HashMap; sirf a-z to array fast.\n\nKotlin groupBy readable par performance critical path par array prefer."
       },
       {
         "q": "Sliding window — longest unique substring",
-        "en": "Two pointers + set/map last index; O(n).",
-        "hi": "Fixed vs variable window templates yaad karo."
+        "en": "Variable window: expand right pointer, track chars in HashSet or map last index; shrink left while duplicate exists. Track max length.\n\nTime O(n) each char enters/leaves window once. Space O(min(n, alphabet)).\n\nTemplate: while invalid shrink; update answer; expand. Fixed window variant for max sum subarray of size k.\n\nAndroid: longest unique session id substring in analytics stream processing on backend; client-side debounce window similar intuition.\n\nPractice: minimum window substring, max consecutive ones III with flip budget.",
+        "hi": "Do pointer window — right expand jab tak unique; duplicate aaye left shrink.\n\nHashSet ya lastIndex map duplicate track.\n\nO(n) time — har char do baar se zyada move nahi.\n\nFixed window alag template — size k ka max sum.\n\nInterview pehle brute O(n³) phir sliding window optimize."
       },
       {
         "q": "Binary search — when applicable",
-        "en": "Sorted array O(log n); find first/last, rotated array variants.",
-        "hi": "mid = left+(right-left)/2; monotonic property dhundho."
+        "en": "Requires monotonic predicate on sorted data — if condition true for mid, search left or right half. O(log n) time O(1) space.\n\nVariants: first/last occurrence, search rotated sorted array, binary search on answer (min capacity to ship in D days).\n\nMid calculation: left + (right - left) / 2 avoids overflow. Avoid infinite loop with correct boundary updates.\n\nAndroid: binary search product id in sorted local cache; bisect version rollout threshold.\n\nNot applicable on unsorted — sort first O(n log n) or use HashMap O(n).",
+        "hi": "Sorted array par binary search O(log n). Monotonic property dhundho — answer space par bhi apply hota hai.\n\nMid overflow se bachne left+(right-left)/2.\n\nFirst/last occurrence boundary tricky — practice karo.\n\nUnsorted par pehle sort ya HashMap — galat tool mat use karo.\n\nRotated array modified BS common follow-up."
       },
       {
         "q": "Merge intervals",
-        "en": "Sort by start; merge overlapping O(n log n).",
-        "hi": "Booking slots overlap same pattern."
+        "en": "Sort intervals by start time O(n log n). Iterate: if current overlaps merged last (start <= last.end), extend last.end = max(last.end, current.end); else append new interval.\n\nOverlap test: a.start <= b.end && b.start <= a.end. After merge, disjoint sorted intervals.\n\nApplications: meeting room scheduling, calendar busy blocks, delivery slot consolidation.\n\nAndroid: merge overlapping promo active periods in admin dashboard; offline sync batch windows.\n\nEdge: empty input, single interval, all overlapping into one.",
+        "hi": "Start time se sort phir merge — overlap ho to end extend. Nahi to naya interval.\n\nO(n log n) sort dominant step.\n\nBooking slots, delivery windows real use case bolo.\n\nSort ke baad linear scan enough.\n\nEmpty/single edge case mention karo interview mein."
       },
       {
         "q": "BFS vs DFS use cases",
-        "en": "BFS shortest unweighted; DFS paths/cycles. O(V+E).",
-        "hi": "BFS level-order; DFS dependencies topological sort."
+        "en": "BFS: queue, level-order, shortest path in unweighted graph O(V+E). DFS: stack/recursion, explore depth, paths, cycles, topological sort.\n\nGraph representations: adjacency list HashMap node→neighbors common in interviews.\n\nAndroid: BFS — shortest navigation steps in app screen graph debug tool; DFS — dependency resolution feature modules DAG.\n\nVisited set prevents cycles. Grid problems: 4-direction BFS/DFS flood fill islands.\n\nMemory: BFS queue can be large wide graph; DFS recursion depth stack overflow risk — iterative DFS alternative.",
+        "hi": "BFS queue — shortest path unweighted, level order. DFS stack/recursion — path, cycle detect.\n\nVisited set zaroori warna infinite loop.\n\nGrid par 4 direction move common pattern flood fill.\n\nFeature dependency topological sort DFS + indegree bhi.\n\nWide graph BFS memory zyada — mention trade-off."
       },
       {
         "q": "Cycle in linked list",
-        "en": "Floyd tortoise hare; O(1) space.",
-        "hi": "Slow 1x fast 2x — cycle mein meet."
+        "en": "Floyd tortoise-hare: slow moves 1, fast moves 2; if cycle exists they meet inside cycle. O(n) time O(1) space.\n\nFind cycle start: after meet, reset one pointer to head, advance both 1 step until meet — math proof optional in interview.\n\nHashSet of visited nodes O(n) space simpler to explain first.\n\nAndroid analogy: circular reference chain detection similar spirit to leak tracing (not identical).\n\nRelated: happy number, duplicate number using cycle detection.",
+        "hi": "Slow 1 step fast 2 step — cycle mein mil jayenge. O(1) space optimal.\n\nPehle HashSet se explain easy phir Floyd optimize.\n\nCycle start nikalna optional advanced step.\n\nLinked list reverse/cycle dono pointer skills hain.\n\nNo cycle par fast null par pahunchega."
       },
       {
         "q": "Reverse linked list iterative",
-        "en": "prev curr next pointers O(n) O(1) space.",
-        "hi": "Pointer practice basic interview."
+        "en": "Three pointers prev=null, curr=head, next; while curr: next=curr.next; curr.next=prev; prev=curr; curr=next. Return prev as new head.\n\nO(n) time O(1) space. Recursive variant O(n) stack space.\n\nPattern base for reverse between m-n, k-group reverse advanced.\n\nAndroid: less direct but tests pointer discipline useful understanding LinkedHashMap/LruCache internals conceptually.\n\nDraw diagram in interview — pointer order mistakes common bug.",
+        "hi": "prev, curr, next teen pointer — curr.next reverse karte jao. End par prev new head.\n\nIterative O(1) space preferred.\n\nRecursive stack O(n) — iterative bolo pehle.\n\nDiagram banao whiteboard par — interview mein help.\n\nPartial reverse follow-up prepare karo."
       },
       {
         "q": "Valid parentheses with stack",
-        "en": "Push open; pop match close; end empty stack.",
-        "hi": "Stack undo/navigation analogy."
+        "en": "Scan string: push opening brackets; on closing, stack must non-empty and top matches pair. End stack empty for valid.\n\nTime O(n), space O(n) worst case.\n\nExtensions: minimum add to valid, longest valid substring DP harder.\n\nAndroid: expression parsing light similarity; navigation back stack LIFO mental model for juniors.\n\nMap pairs ')'→'(', etc. Edge: only opens, only closes, nested valid.",
+        "hi": "Opening bracket stack push; closing par top match pop. End empty stack valid.\n\nStack LIFO — undo/back stack analogy Android UI.\n\nMismatch ya empty stack pop — invalid.\n\nO(n) single pass.\n\nMinimum add brackets follow-up DP/stack combo."
       },
       {
         "q": "Sliding window maximum (deque)",
-        "en": "Monotonic deque indices; amortized O(n).",
-        "hi": "Hard pattern — decreasing deque maintain."
+        "en": "Monotonic decreasing deque stores indices; front always current window max index. Remove indices outside window from front; pop back while smaller elements useless.\n\nAmortized O(n) — each index pushed/popped once. Hard pattern but shows deque mastery.\n\nContrast with heap O(n log k) for top k simpler to code under pressure.\n\nAndroid: rolling max network latency window monitoring dashboard — same algorithmic idea on metrics stream.\n\nBrute O(n*k) first in interview then optimize.",
+        "hi": "Deque indices store — front max element current window. Purane index front se hatao.\n\nMonotonic decreasing — chhote useless pop back se.\n\nAmortized O(n) — hard par impressive.\n\nHeap se bhi ho sakta O(n log k) — trade-off bolo.\n\nPehle brute force approach batao interviewer ko."
       },
       {
         "q": "Group anagrams HashMap",
-        "en": "Key sorted string or freq signature; group lists.",
-        "hi": "Custom key design skill."
+        "en": "Key: sorted string or char frequency signature (e.g., count array encoded string). Value: list of strings grouping same key.\n\nTime O(n * k log k) if sort each word length k; O(n*k) with freq key.\n\nPattern: custom key design for bucketing — contact grouping, sku normalization.\n\nAndroid: group search keywords by normalized form for analytics batch.\n\nSpace O(n*k) store all strings in groups.",
+        "hi": "Key sorted word ya frequency signature — same key wale bucket mein.\n\nHashMap<String, List<String>> result.\n\nFreq key sort se faster long words par.\n\nCustom key design skill test — interview explain clearly.\n\nOutput list of groups — order matter karta hai ya nahi clarify."
       },
       {
         "q": "DP climbing stairs / Fibonacci",
-        "en": "dp[i]=dp[i-1]+dp[i-2]; optimize two vars O(1) space.",
-        "hi": "Overlapping subproblems + optimal substructure pehchano."
+        "en": "dp[i] = ways to reach step i = dp[i-1] + dp[i-2]; base dp[0]=1 dp[1]=1. O(n) time optimize to two variables O(1) space.\n\nRecognize overlapping subproblems + optimal substructure — DP candidates.\n\nVariants: min cost climbing stairs, decode ways, house robber linear DP.\n\nAndroid: not daily coding but shows structured thinking for state machines and multi-step checkout flows combinatorics rarely.\n\nBottom-up preferred over memo recursion stack limits.",
+        "hi": "Stairs 1 ya 2 step — Fibonacci jaisa recurrence. dp[i]=dp[i-1]+dp[i-2].\n\nDo variable se space O(1) optimize.\n\nDP pattern pehchan: subproblem repeat + optimal build.\n\nHouse robber, min cost similar family.\n\nTop-down memo vs bottom-up — bottom-up preferred interview code mein."
       },
       {
         "q": "Tree max depth",
-        "en": "Recursive 1+max(left,right) DFS O(n).",
-        "hi": "ViewGroup hierarchy analogy."
+        "en": "Recursive DFS: 1 + max(depth(left), depth(right)); null base 0. O(n) visit each node once.\n\nBFS level count alternative — increment depth each level processed.\n\nBalanced check, diameter, LCA build on same traversal skills.\n\nAndroid analogy: View hierarchy depth (over-nesting warning), JSON tree max nesting validation.\n\nStack overflow very deep skewed tree — iterative post-order optional mention.",
+        "hi": "Recursive null par 0; warna 1 + max(left, right). Simple DFS.\n\nBFS level count se bhi depth milti hai.\n\nHar node ek baar — O(n).\n\nSkewed tree deep recursion risk — iterative mention optional.\n\nDiameter/LCA follow-ups same tree foundation."
       },
       {
         "q": "Top K elements (heap)",
-        "en": "Min-heap size K for largest K; O(n log k).",
-        "hi": "Nearest K stores top rated products."
+        "en": "Find K largest: min-heap size K — if num > peek replace; O(n log k). K smallest: max-heap mirror.\n\nQuickselect average O(n) advanced. Sort O(n log n) acceptable small n.\n\nApplications: top K rated products, nearest K stores with heap of distances.\n\nAndroid: prioritize K notification candidates by score in inbox cap.\n\nKotlin: PriorityQueue Java interop; or partial sort sortedDescending().take(k) small k pragmatic.",
+        "hi": "K largest ke liye min-heap size K — root smallest among top K. Bada aaye to pop push.\n\nO(n log k) — n log n sort se better jab k chhota.\n\nNearest K stores heap — e-commerce example.\n\nKotlin PriorityQueue use kar sakte ho.\n\nK sabse chhote ke liye max-heap ulta logic."
       }
     ]
   },
@@ -435,78 +430,78 @@ const INTERVIEW_QA = [
     "items": [
       {
         "q": "Architect large Flutter + Android org",
-        "en": "Feature modules, shared core, contracts, MVVM/BLoC, CI/CD, feature flags.",
-        "hi": "Team size par modules; ADR decisions document."
+        "en": "Organize by feature modules (:feature:orders, :feature:catalog) plus shared :core:network, :core:database, :core:designsystem. Contract modules expose interfaces; implementation hidden — prevents feature-to-feature coupling.\n\nAlign patterns per platform: Flutter BLoC/go_router; Android MVVM/Navigation/Compose — shared domain rules documented, not necessarily shared code.\n\nGovernance: ADRs for decisions, lint/detekt/ktlint, module dependency lint (Gradle dependencyAnalysis), CODEOWNERS per feature.\n\nCI/CD per module affected builds; feature flags LaunchDarkly/Firebase Remote Config decouple release from deploy.\n\nInterview: scale teams 10–30 engineers; weekly release train; monorepo vs multi-repo trade-offs candid.",
+        "hi": "Feature modules alag team ownership — core shared network/DB/design tokens.\n\nFlutter aur Android alag UI par same domain rules document — duplicate business logic kam.\n\nADR se decision record — baad mein kyun yeh pattern pata rahe.\n\nFeature flag se half rollout — Razorpay UPI naya method test.\n\nDependency rules enforce — feature A ko feature B direct mat dikhe."
       },
       {
         "q": "Single source of truth practically",
-        "en": "UI observes Repository/Room Flow; network updates DB; no duplicate authoritative state.",
-        "hi": "Cart state ek jagah; conflict policy explicit."
+        "en": "One authoritative store per data type — Room for cart entities, not duplicate ArrayList in ViewModel and Fragment. UI observes Repository Flow; writes go through Repository API only.\n\nViewModel caches presentation transforms (sorted/filtered) derived from SSOT, not second mutable copy of truth.\n\nSync: network response writes DB; UI automatically updates — no manual notify both places.\n\nConflict: define server-wins for price, client-wins for draft qty until checkout — document in domain layer.\n\nAnti-pattern: EventBus broadcasting cart changes while also holding local list — desync bugs.",
+        "hi": "Cart data ek jagah Room — ViewModel sirf observe + command. Do jagah list mat rakho.\n\nNetwork se aaya to DB update — Flow se UI auto refresh.\n\nDerived UI state sort/filter alag ho sakta hai par source ek.\n\nConflict policy likhi honi chahiye — interview mein explicitly bolo.\n\nEventBus + local list duplicate SSOT bug factory hai."
       },
       {
         "q": "API versioning and backward compatibility",
-        "en": "v1/v2 APIs, nullable fields, feature flags, min supported version force update when needed.",
-        "hi": "ignoreUnknown fields; breaking change par force update rare."
+        "en": "URL path /v1/ /v2/ or header Accept-Version; never break existing fields without deprecation window. Additive changes safe — new nullable JSON fields; clients ignoreUnknownKeys.\n\nMobile: ship app supporting N and N-1 schema; feature flag new parser path. Force update only when security/legal or unrecoverable break — bad UX.\n\nContract testing Pact between mobile and backend teams catches breaks pre-release.\n\nRoom migrations parallel — don't assume instant user updates. eNagarpalika long tail old versions.\n\nInterview: nullable new field default behavior; sunset timeline communicated.",
+        "hi": "Naye field nullable add karo — purana app crash nahi. Breaking change se bacho.\n\n/v2 alag endpoint jab zaroori break ho — migration period dono support.\n\nForce update sirf critical — warna Play rating hurt.\n\nMoshi ignoreUnknownKeys true JSON forward compatible.\n\nBackend aur mobile sync release calendar important badi org mein."
       },
       {
         "q": "Idempotency in payments and orders",
-        "en": "Unique client order IDs; server idempotency keys; verify before success UI.",
-        "hi": "Double tap pay duplicate charge na ho."
+        "en": "Client generates Idempotency-Key (UUID) per placeOrder tap; server stores key→result — retries return same order not duplicate charge.\n\nRazorpay: server order id unique; payment verify once; webhook idempotent handler checks processed payment_id.\n\nUI: disable pay button while in-flight; still handle rotation with pending state in Room.\n\nNetwork retry safe only with idempotency — exponential backoff without key dangerous.\n\nAudit logs for fintech compliance — duplicate prevention demonstrable to auditors.",
+        "hi": "Place order button par unique client request id — server duplicate request same response de.\n\nDouble tap se do charge nahi — idempotency key mandatory payment mein.\n\nWebhook bhi idempotent — same payment_id do baar process mat.\n\nUI loading disable + pending state DB mein save.\n\nRetry safe tabhi jab server idempotent ho — warna duplicate order."
       },
       {
         "q": "Paging 3 vs manual pagination",
-        "en": "PagingSource chunks, retry, Room RemoteMediator; better memory UX.",
-        "hi": "Zila catalog jaisa; LoadState handle."
+        "en": "Paging 3: PagingSource load pages; PagingData flows to UI; built-in retry, jump, combined with RemoteMediator for Room+network cache. LoadState Header/Footer in RecyclerView or Compose LazyPagingItems.\n\nManual: page++ API, append list, fragile duplicate pages, error/retry reinvented, memory grows unbounded if forget trim.\n\nRemoteMediator pattern: refresh network → DB → Paging reads DB — offline-first catalog Zila scale.\n\nTesting: FakePagingSource inject. Parameters filter changes invalidate PagingSource.\n\nWhen manual OK: tiny static lists admin-only screens — pragmatism.",
+        "hi": "Paging 3 library load/ retry/ append handle — RecyclerView PagingDataAdapter.\n\nRemoteMediator network se Room fill kare — offline catalog strong pattern.\n\nManual page++ error prone — duplicate item, retry missing common bug.\n\nLoadState shimmer/error footer built-in.\n\nBadi product list par Paging 3 almost default choice ab."
       },
       {
         "q": "Multi-module dependency rules",
-        "en": "Features depend core not each other; api vs implementation; no cycles; interface modules.",
-        "hi": "PR review wrong dependency direction."
+        "en": "Dependency direction: feature → domain ← data; features must not depend on each other directly — share via domain contracts or events.\n\nGradle api vs implementation: expose types only when needed — leaks transitive deps. Enforce with module graph assert tests.\n\n:core:testing fakes for cross-feature test doubles. Avoid circular modules — extract :core:common if needed.\n\nDynamic feature modules optional Play delivery — base module stable API surface.\n\nInterview red flag you fix: :feature:cart depends :feature:checkout internals — refactor to shared :core:order-api interface.",
+        "hi": "Feature modules ek doosre par directly depend na karein — core domain interface se baat.\n\napi vs implementation — sirf zaroori type bahar expose.\n\nCycle dependency Gradle fail — common module nikalo.\n\nPR review dependency direction check senior responsibility.\n\nWrong direction fix karna architecture interview strong signal hai."
       },
       {
         "q": "Testability at scale",
-        "en": "DI interfaces, fakes, runTest, Turbine; test pyramid many unit few E2E.",
-        "hi": "CI unit mandatory; blind 100% coverage nahi."
+        "en": "Constructor injection interfaces everywhere — swap FakePaymentGateway, InMemoryDao. ViewModel pure Kotlin logic test runTest; Turbine Flow; no Robolectric unless Android API needed.\n\nTest pyramid: 70% unit, 20% integration Room/RoomMigrationTest, 10% UI smoke Espresso critical paths checkout login.\n\nCI: every PR unit + lint; nightly full suite + release build minify. Flaky test quarantine policy zero tolerance long term.\n\nContract tests API JSON fixtures checked in repo. Snapshot testing Compose paparazzi optional.\n\nCoverage metric guide not goal — assert behavior not lines.",
+        "hi": "Interface + fake — payment, repo, FCM service test double.\n\nrunTest ViewModel — loading/success/error states Turbine se verify.\n\nCI PR par fast unit — bada suite nightly.\n\nFlaky test fix ya quarantine — green build trust important.\n\n100% coverage chase mat — critical checkout path test karo."
       },
       {
         "q": "Observability crashes ANR performance",
-        "en": "Crashlytics, Performance, custom logs; staged rollout metrics.",
-        "hi": "Crash-free users %; PII log mat bhejo."
+        "en": "Crashlytics for fatals/non-fatals with custom keys userId hash, build flavor, screen. Performance Monitoring traces checkout API latency. Firebase Analytics funnels drop-off steps.\n\nANR rate Play Vitals dashboard — prioritize main thread stacks. Log structured breadcrumbs not PII passwords tokens.\n\nStaged rollout 5%→20%→100% watch crash-free users metric. Rollback plan previous version code ready.\n\nOpenTelemetry emerging mobile — correlate client trace id with backend logs for payment failures.\n\nOn-call runbook: Razorpay spike failures — check server verify endpoint 5xx not client only.",
+        "hi": "Crashlytics release crash track — custom keys flavor, screen, userId hash.\n\nANR vitals main thread stack — fix priority.\n\nStaged rollout se pehle 5% par crash dekho.\n\nLog mein PII mat — GDPR/compliance issue.\n\nPayment fail par client+server dono trace id se debug senior workflow."
       },
       {
         "q": "Security architecture fintech/gov",
-        "en": "Pinning, encrypted storage, server auth, OWASP, obfuscation, compliance reviews.",
-        "hi": "eNagarpalika data minimization session timeout."
+        "en": "Defense in depth: TLS + pinning optional, certificate rotation plan, EncryptedSharedPreferences/Keystore, biometric gate sensitive actions, server session short TTL refresh rotation.\n\nOWASP MASVS L1/L2 checklist; root detection informative not sole control. Obfuscation R8; tamper detection Play Integrity API attestation high-value flows.\n\neNagarpalika/gov: data minimization, audit logs, offline encrypted cache expiry, screenshot block FLAG_SECURE on sensitive screens.\n\nSecrets never client-only; Razorpay secret server; API keys restricted. Pen test before major release.\n\nIncident response: remote kill switch feature flag disable payments.",
+        "hi": "Fintech/gov mein security layer — encrypt storage, HTTPS, session timeout, audit log.\n\nToken Keystore mein — plain prefs nahi. Sensitive screen FLAG_SECURE optional.\n\nRoot detect sirf hint — server validation main.\n\nPlay Integrity high value transaction attestation.\n\nPen test aur MASVS checklist interview mein naam lo — serious org signal."
       },
       {
         "q": "Offline-first vs network-first decision",
-        "en": "Offline for field/poor network; network-first real-time prices; stale indicator hybrid.",
-        "hi": "Product requirement drive — SK Agent offline example."
+        "en": "Offline-first when users have intermittent connectivity — field sales SK Agent, municipal data collection, catalog browse in rural 4G gaps. Show cached immediately; background sync; conflict rules explicit.\n\nNetwork-first when data must be fresh — live auction prices, stock tick, payment status during checkout verify polling.\n\nHybrid common: cache display with stale badge; pull-to-refresh force network; TTL 5 min products ok, payment never stale guess.\n\nMeasure: offline session success rate guides investment. Don't offline-first everything — engineering cost migrations conflicts.\n\nInterview frame as product requirement not ideology.",
+        "hi": "Offline-first jab network unreliable — field app, rural users. Pehle cache dikhao sync baad mein.\n\nNetwork-first jab real-time zaroori — live price, payment confirm server se.\n\nHybrid stale indicator achha UX — user ko pata data purana ho sakta hai.\n\nHar feature offline-first mat — cost zyada conflict sync mushkil.\n\nProduct requirement se decide karo — SK Agent offline example."
       },
       {
         "q": "One-time UI events problem",
-        "en": "Do not use StateFlow for navigation; SharedFlow/Channel/UiEffect consumed once.",
-        "hi": "Rotation par double navigate classic bug."
+        "en": "StateFlow replays last value to new collectors — rotation re-triggers navigation/toast if event stored in same state. Separate channel for events: SharedFlow replay=0, Channel, or UDF UiEffect consumed once.\n\nPatterns: queue events in ViewModel consumed by UI; SnackbarHostState in Compose; LiveData SingleLiveEvent hack legacy.\n\nTest: rotate after emit — assert no double navigation. Process death may still replay if not designed — idempotent navigation safe args helps.\n\nDocument team standard — mixed patterns across modules confuse juniors.\n\nSenior signal: explain why StateFlow alone wrong for NavigateToOrderDetail.",
+        "hi": "Navigation/snackbar one-time event — StateFlow mein mat rakho warna rotate par dubara fire.\n\nSharedFlow replay=0 ya Channel — consume ek baar.\n\nSingleLiveEvent purana LiveData hack — Flow era mein SharedFlow better.\n\nTest rotation ke baad ek hi navigate hua verify karo.\n\nTeam mein ek standard pattern decide karo — mixed se bug aate hain."
       },
       {
         "q": "Java to Kotlin migration at scale",
-        "en": "Module-by-module; new code Kotlin; interop annotations; tests first; no big-bang.",
-        "hi": "ShopKirana story measurable crash reduction."
+        "en": "Strategy: new code Kotlin only; convert modules when touching heavily; no big-bang rewrite. Enable Kotlin module by module; interop @JvmStatic, @JvmOverloads, nullability annotations on Java remaining.\n\nTests before convert — characterization tests lock behavior. Android KTX extensions adopt gradually.\n\nMeasure crash rate NPE reduction post-migration. Detekt ktlint enforce idioms not Java-style in Kotlin files.\n\nRoom/Retrofit codegen Kotlin first. Remove findViewById Java Activities last via ViewBinding/Compose strangler.\n\nShopKirana narrative: phased migration reduced production NPE cluster over quarters not weeks.",
+        "hi": "Naya code Kotlin — purana Java jab touch karo tab convert. Big bang risky.\n\nJava baaki ho to @Nullable @NonNull annotate — interop smooth.\n\nConvert se pehle test likho behavior same rahe.\n\nNPE crash metric track karo migration ke baad.\n\nModule by module Gradle Kotlin plugin — team parallel kaam kar sake."
       },
       {
         "q": "Compose vs Views coexistence",
-        "en": "Gradual Compose screens; ComposeView/AndroidView interop; shared design tokens.",
-        "hi": "Strangler pattern ek screen ek time."
+        "en": "Strangler fig: new screens Compose in same NavHost via composable destination; legacy Fragment remains until replaced. ComposeView in Fragment hosts Compose; AndroidView in Compose wraps MapView, Razorpay, Ad SDK.\n\nShared design system: theme colors typography as Compose MaterialTheme + View theme attrs synced from token module.\n\nNavigation unified NavGraph composable + fragment destinations interop. ViewModel shared both sides.\n\nPerformance test scroll hybrid screens; recomposition boundaries for AndroidView expensive.\n\nTeam plan: 20% screens quarter until 80% — realistic stakeholder communication.",
+        "hi": "Ek saath chal sakte hain — naya screen Compose, purana XML Fragment. ComposeView Fragment mein embed.\n\nThird-party SDK AndroidView se wrap — Razorpay, Maps.\n\nDesign tokens ek module se View + Compose dono theme sync.\n\nBig bang rewrite mat — screen by screen replace.\n\nShared ViewModel dono UI ke liye — business logic ek jagah."
       },
       {
         "q": "CI/CD pipeline for mobile",
-        "en": "Lint, unit tests, release AAB, secure signing, Play internal track, Test Lab optional.",
-        "hi": "PR fast checks; secrets encrypted CI."
+        "en": "PR: lint (detekt, android lint), unit tests, assemble debug. Main: instrumentation shard optional, release AAB build minifyEnabled, sign with keystore from CI secrets encrypted.\n\nPlay internal → closed → production tracks; Fastlane/Gradle Play Publisher automate upload. VersionCode monotonic; semantic versionName user-facing.\n\nArtifacts: mapping.txt to Crashlytics, SBOM optional security. Cache Gradle deps speed.\n\nGates: block merge on test fail; manual QA checklist payment sandbox before prod promote.\n\nSecrets: never in repo; GitHub Actions encrypted secrets; Play App Signing Google holds upload key.",
+        "hi": "Har PR lint + unit test — fail par merge band. Release branch AAB signed build.\n\nFastlane Play upload automate — manual error kam.\n\nmapping.txt Crashlytics ko attach release ke saad.\n\nSecrets CI encrypted — repo mein keystore mat.\n\nInternal track pehle QA phir production staged rollout."
       },
       {
         "q": "System design: feed or municipal app",
-        "en": "Clarify requirements; UI→VM→Repo→API+Cache; paging; images CDN; offline policy; failure modes; metrics.",
-        "hi": "2 min requirements; trade-offs bolo; gov accessibility locale."
+        "en": "Clarify 2 min: users (citizens/field officers), features (complaints, status, documents), offline need, locales, accessibility, scale (DAU, peak).\n\nArchitecture: UI Compose/Views → ViewModel → Repository → {Retrofit, Room, DataStore}. Paging feed; WorkManager sync; FCM status updates; document upload resumable OkHttp multipart.\n\nNon-functional: encrypted storage PII, session timeout, low-end device list perf DiffUtil/Paging, Hindi+English i18n, TalkBack labels gov compliance.\n\nFailure: upload retry queue; conflict ticket id server authoritative; graceful degradation read-only offline.\n\nMetrics: crash-free, ANR, complaint submit success rate, p95 API latency — close with trade-offs chosen.",
+        "hi": "Pehle requirements — kaun user, kya feature, offline kitna, scale kitna. 2 minute clarify interview start.\n\nLayers bolo UI→VM→Repo→API+Room. Municipal app mein document upload + status tracking.\n\neNagarpalika jaisa — data sensitive encrypt, locale Hindi, accessibility.\n\nFailure mode: upload fail retry queue; offline read-only mode.\n\nEnd mein trade-off — kya choose kiya kyun aur metrics kaise dekhenge."
       }
     ]
   }

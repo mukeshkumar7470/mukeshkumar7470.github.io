@@ -21,6 +21,16 @@
     return div.innerHTML;
   }
 
+  function formatAnswer(text) {
+    if (!text) return "";
+    return text
+      .split(/\n\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => `<p>${escapeHtml(p)}</p>`)
+      .join("");
+  }
+
   function getAllItems() {
     const items = [];
     INTERVIEW_QA.forEach((cat) => {
@@ -57,11 +67,11 @@
         <div class="iqa-body">
           <div class="iqa-block iqa-en">
             <h4><i class="fa-solid fa-microphone"></i> Interview answer (English)</h4>
-            <p>${escapeHtml(item.en)}</p>
+            <div class="iqa-text">${formatAnswer(item.en)}</div>
           </div>
           <div class="iqa-block iqa-hi">
             <h4><i class="fa-solid fa-book-open"></i> Deep explanation (Hindi)</h4>
-            <p>${escapeHtml(item.hi)}</p>
+            <div class="iqa-text">${formatAnswer(item.hi)}</div>
           </div>
         </div>
       </details>

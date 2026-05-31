@@ -1224,14 +1224,24 @@ body:hover .cursor-glow { opacity: 1; }
 .iqa-en h4 { color: var(--accent-2); }
 .iqa-hi h4 { color: var(--accent-3); }
 
-.iqa-block p {
+.iqa-text p {
   font-size: 0.9rem;
   color: var(--text-muted);
-  line-height: 1.65;
+  line-height: 1.75;
+  margin-bottom: 0.85rem;
 }
 
-.iqa-hi p {
+.iqa-text p:last-child {
+  margin-bottom: 0;
+}
+
+.iqa-en .iqa-text p {
+  color: var(--text);
+}
+
+.iqa-hi .iqa-text p {
   font-family: var(--font);
+  color: var(--text-muted);
 }
 
 .iqa-empty {
