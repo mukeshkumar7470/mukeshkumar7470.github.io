@@ -29,4 +29,4 @@ Place your resume PDF at `assets/Mukesh-Kumar-Patel-CV.pdf` for the download but
 
 ## Deploy
 
-Push to the `main` branch of `mukeshkumar7470.github.io` — GitHub Pages serves the site automatically.
+Push to the `master` branch of `mukeshkumar7470.github.io` — GitHub Pages serves the site automatically.
