@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/interview-animations.css">
 </head>
 <body class="interview-page">
   <div class="bg-mesh" aria-hidden="true"></div>
@@ -29,7 +30,7 @@
       <div class="interview-bottom-header reveal visible">
         <span class="section-tag">Interview Prep</span>
         <h1>Java, Kotlin, Android & Architecture Q&A</h1>
-        <p class="section-desc">94 in-depth interview questions with detailed <strong>English answers</strong> (multi-paragraph, interview-ready) and <strong>Hindi deep explanations</strong> — searchable by topic.</p>
+        <p class="section-desc">94 in-depth interview questions with <strong>animated visuals</strong>, detailed <strong>English answers</strong>, and <strong>Hindi deep explanations</strong> — expand any topic to play its animation.</p>
       </div>
 
       <div class="interview-toolbar reveal visible">
@@ -53,7 +54,7 @@
           <i class="fa-solid fa-lightbulb"></i>
           <div>
             <strong>How to use</strong>
-            <p>Practice the English block out loud for interviews. Read the Hindi block for deeper understanding. Filter by category or search keywords.</p>
+            <p>Expand a question to see an <strong>animated visual</strong> first, then read English + Hindi answers. Animations replay each time you open a topic.</p>
           </div>
         </div>
         <div class="prep-card">
@@ -79,6 +80,7 @@
   </footer>
 
   <script src="js/interview-data.js"></script>
+  <script src="js/interview-visuals.js"></script>
   <script src="js/interview.js"></script>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();

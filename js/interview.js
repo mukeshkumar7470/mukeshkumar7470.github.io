@@ -54,8 +54,16 @@
     return hay.includes(query);
   }
 
+  function renderVisualBlock(item) {
+    if (typeof InterviewVisuals !== "undefined") {
+      return InterviewVisuals.renderVisual(item.q, item.categoryId);
+    }
+    return "";
+  }
+
   function renderAccordion(item) {
     const openAttr = expandAll ? " open" : "";
+    const visual = renderVisualBlock(item);
     return `
       <details class="iqa-item" data-category="${item.categoryId}" data-id="${item.globalId}"${openAttr}>
         <summary class="iqa-summary">
@@ -65,6 +73,7 @@
           <i class="fa-solid fa-chevron-down iqa-chevron" aria-hidden="true"></i>
         </summary>
         <div class="iqa-body">
+          ${visual}
           <div class="iqa-block iqa-en">
             <h4><i class="fa-solid fa-microphone"></i> Interview answer (English)</h4>
             <div class="iqa-text">${formatAnswer(item.en)}</div>
@@ -117,6 +126,15 @@
         ? `${total} question${total === 1 ? "" : "s"} shown`
         : "0 questions";
     }
+
+    if (typeof InterviewVisuals !== "undefined") {
+      InterviewVisuals.bindVisualAnimations(listEl);
+      if (expandAll) {
+        listEl.querySelectorAll(".iqa-item[open]").forEach((d) => {
+          InterviewVisuals.playItemAnimation(d);
+        });
+      }
+    }
   }
 
   function render() {
@@ -160,18 +178,14 @@
   if (expandAllBtn) {
     expandAllBtn.addEventListener("click", () => {
       expandAll = true;
-      listEl.querySelectorAll(".iqa-item").forEach((el) => {
-        el.open = true;
-      });
+      render();
     });
   }
 
   if (collapseAllBtn) {
     collapseAllBtn.addEventListener("click", () => {
       expandAll = false;
-      listEl.querySelectorAll(".iqa-item").forEach((el) => {
-        el.open = false;
-      });
+      render();
     });
   }
 
