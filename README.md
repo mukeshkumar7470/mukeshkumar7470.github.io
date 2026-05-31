@@ -6,7 +6,7 @@ Modern single-page portfolio for a Mobile App Developer (Android & Flutter), hos
 
 ## Features
 
-- **Interview Prep** — 95 Q&A (Java, Kotlin, Android, DSA, Senior Architecture) with English interview answers and Hindi explanations; search and filter by category
+- **Interview Prep** — separate page (`interview.html`) with 95 Q&A; open via footer button on the portfolio
 
 ## Stack
 

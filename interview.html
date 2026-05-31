@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Prep — Mukesh Kumar Patel</title>
+  <meta name="description" content="95 Java, Kotlin, Android, DSA and Senior Architecture interview Q&A with English answers and Hindi explanations.">
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="interview-page">
+  <div class="bg-mesh" aria-hidden="true"></div>
+
+  <header class="site-header scrolled" id="header">
+    <nav class="nav container" aria-label="Interview prep">
+      <a href="index.html" class="nav-logo">MK<span class="accent">.</span></a>
+      <a href="index.html" class="btn btn-outline btn-sm nav-back">
+        <i class="fa-solid fa-arrow-left"></i> Back to Portfolio
+      </a>
+    </nav>
+  </header>
+
+  <main class="interview-page-main">
+    <div class="container">
+      <div class="interview-bottom-header reveal visible">
+        <span class="section-tag">Interview Prep</span>
+        <h1>Java, Kotlin, Android & Architecture Q&A</h1>
+        <p class="section-desc">95 interview questions with <strong>English answers</strong> (what to say) and <strong>Hindi deep explanations</strong> — searchable by topic.</p>
+      </div>
+
+      <div class="interview-toolbar reveal visible">
+        <div class="interview-search-wrap">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" id="interviewSearch" class="interview-search" placeholder="Search questions… (e.g. MVVM, coroutines, HashMap)" autocomplete="off" aria-label="Search interview questions">
+        </div>
+        <div class="interview-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="interviewExpandAll">Expand all</button>
+          <button type="button" class="btn btn-outline btn-sm" id="interviewCollapseAll">Collapse all</button>
+        </div>
+      </div>
+
+      <div class="interview-tabs-wrap reveal visible">
+        <div class="interview-tabs" id="interviewTabs" role="tablist" aria-label="Question categories"></div>
+        <p class="interview-count" id="interviewCount" aria-live="polite"></p>
+      </div>
+
+      <div class="interview-prep-note reveal visible">
+        <div class="prep-card">
+          <i class="fa-solid fa-lightbulb"></i>
+          <div>
+            <strong>How to use</strong>
+            <p>Practice the English block out loud for interviews. Read the Hindi block for deeper understanding. Filter by category or search keywords.</p>
+          </div>
+        </div>
+        <div class="prep-card">
+          <i class="fa-solid fa-calendar-check"></i>
+          <div>
+            <strong>7-day plan</strong>
+            <p>Days 1–2: Java + Kotlin · Days 3–4: Android · Day 5: DSA · Day 6: Senior architecture · Day 7: Mock interview.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="interviewList" class="interview-list reveal visible" aria-label="Interview questions and answers"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p><a href="index.html">← Portfolio</a> · &copy; <span id="year"></span> Mukesh Kumar Patel</p>
+      <a href="index.html" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-house"></i> Home
+      </a>
+    </div>
+  </footer>
+
+  <script src="js/interview-data.js"></script>
+  <script src="js/interview.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
