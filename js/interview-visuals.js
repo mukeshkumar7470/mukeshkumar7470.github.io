@@ -75,6 +75,7 @@
 
   const DEFAULT_BY_CAT = {
     java: "default-java",
+    oops: "oop",
     kotlin: "default-kotlin",
     android: "default-android",
     dsa: "default-dsa",
@@ -857,20 +858,47 @@
       </div>`;
   }
 
+  const teachingCache = new Map();
+
   function renderVisual(q, categoryId) {
     const type = resolveVisualType(q, categoryId);
     const stage = VISUALS[type] || VISUALS["default-android"];
     const label = LABELS[type] || "Concept visual";
     return `
-      <div class="iqa-visual" data-visual="${type}">
+      <div class="iqa-visual" data-visual="${type}" data-category="${escapeHtml(categoryId)}">
         <div class="iqa-visual-head">
-          <i class="fa-solid fa-circle-play"></i>
-          <span>Animated visual</span>
+          <span class="iqa-visual-badge"><i class="fa-solid fa-circle-play"></i> Animated visual</span>
+          <button type="button" class="iqa-visual-replay" data-replay aria-label="Replay animation">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Replay
+          </button>
           <small>${escapeHtml(label)}</small>
         </div>
-        <div class="vis-stage vis-play">${stage}</div>
-        ${renderTeachingPanel(type, categoryId)}
+        <div class="vis-stage vis-play">
+          <span class="vis-grid" aria-hidden="true"></span>
+          <span class="vis-glow" aria-hidden="true"></span>
+          ${stage}
+        </div>
+        <button type="button" class="iqa-teach-toggle" data-teach-toggle aria-expanded="false">
+          <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Study guide
+        </button>
+        <div class="iqa-visual-teaching-slot" hidden></div>
       </div>`;
+  }
+
+  function loadTeachingPanel(visual) {
+    const slot = visual.querySelector(".iqa-visual-teaching-slot");
+    if (!slot) return;
+    const type = visual.dataset.visual;
+    const categoryId = visual.dataset.category;
+    const key = `${categoryId}:${type}`;
+    if (!teachingCache.has(key)) {
+      teachingCache.set(key, renderTeachingPanel(type, categoryId));
+    }
+    slot.innerHTML = teachingCache.get(key);
+    slot.hidden = false;
+    slot.dataset.loaded = "1";
+    const btn = visual.querySelector("[data-teach-toggle]");
+    if (btn) btn.setAttribute("aria-expanded", "true");
   }
 
   function escapeHtml(text) {
@@ -881,13 +909,15 @@
 
   let animationsBound = false;
 
+  function replayStage(stage) {
+    if (!stage) return;
+    stage.classList.remove("vis-play");
+    void stage.offsetWidth;
+    stage.classList.add("vis-play");
+  }
+
   function playItemAnimation(details) {
-    const stage = details.querySelector(".vis-stage");
-    if (stage) {
-      stage.classList.remove("vis-play");
-      void stage.offsetWidth;
-      stage.classList.add("vis-play");
-    }
+    details.querySelectorAll(".vis-stage").forEach(replayStage);
     details.querySelectorAll(".iqa-text p").forEach((p, i) => {
       p.style.animationDelay = `${0.08 * i}s`;
       p.classList.add("iqa-para-in");
@@ -917,6 +947,34 @@
       },
       true
     );
+
+    root.addEventListener("click", (e) => {
+      const replayBtn = e.target.closest && e.target.closest("[data-replay]");
+      if (replayBtn) {
+        e.preventDefault();
+        const visual = replayBtn.closest(".iqa-visual");
+        const stage = visual && visual.querySelector(".vis-stage");
+        replayStage(stage);
+        replayBtn.classList.remove("is-spinning");
+        void replayBtn.offsetWidth;
+        replayBtn.classList.add("is-spinning");
+        return;
+      }
+
+      const teachBtn = e.target.closest && e.target.closest("[data-teach-toggle]");
+      if (!teachBtn) return;
+      e.preventDefault();
+      const visual = teachBtn.closest(".iqa-visual");
+      if (!visual) return;
+      const slot = visual.querySelector(".iqa-visual-teaching-slot");
+      if (slot?.dataset.loaded === "1") {
+        const open = slot.hidden;
+        slot.hidden = !open;
+        teachBtn.setAttribute("aria-expanded", String(open));
+        return;
+      }
+      loadTeachingPanel(visual);
+    });
   }
 
   global.InterviewVisuals = {

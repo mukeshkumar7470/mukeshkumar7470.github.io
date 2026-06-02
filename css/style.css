@@ -1214,6 +1214,18 @@ body:hover .cursor-glow { opacity: 1; }
   border-top: 1px solid var(--border);
 }
 
+.iqa-body[data-lazy="1"] {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.iqa-body-placeholder {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .iqa-body .iqa-visual {
   margin-top: 1rem;
   margin-bottom: 0.25rem;

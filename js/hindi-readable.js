@@ -1,6 +1,6 @@
 /**
  * Makes Hindi (hi) interview answers more readable: full sentences, clear punctuation.
- * Used by apply-hindi-polish.js — Roman Hindi + English technical terms.
+ * Used by build-interview.js --polish — Roman Hindi + English technical terms.
  */
 
 function capitalizeFirst(s) {

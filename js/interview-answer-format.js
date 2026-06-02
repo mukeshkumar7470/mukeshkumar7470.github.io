@@ -43,121 +43,10 @@
     return div.innerHTML;
   }
 
-  function splitParagraphs(text) {
-    if (!text) return [];
-    return text
-      .split(/\n\n+/)
-      .map((p) => p.trim())
-      .filter(Boolean);
-  }
-
-  /** Explicit What? / Why? / How? blocks in source text */
-  function parseExplicitSections(text) {
-    const parts = text.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
-    const sections = { what: [], why: [], how: [] };
-    let current = null;
-
-    parts.forEach((part) => {
-      const firstLine = part.split("\n")[0].trim();
-      const body = part.includes("\n") ? part.slice(part.indexOf("\n") + 1).trim() : "";
-      const inline = !body && part.length > 0;
-
-      if (/^what\?$/i.test(firstLine)) {
-        current = "what";
-        const content = inline ? part.replace(/^what\?\s*/i, "").trim() : body;
-        if (content) sections.what.push(content);
-        return;
-      }
-      if (/^why\?$/i.test(firstLine)) {
-        current = "why";
-        const content = inline ? part.replace(/^why\?\s*/i, "").trim() : body;
-        if (content) sections.why.push(content);
-        return;
-      }
-      if (/^how\?$/i.test(firstLine)) {
-        current = "how";
-        const content = inline ? part.replace(/^how\?\s*/i, "").trim() : body;
-        if (content) sections.how.push(content);
-        return;
-      }
-
-      if (current) sections[current].push(part);
-      else sections.what.push(part);
-    });
-
-    const result = [];
-    ["what", "why", "how"].forEach((key) => {
-      if (sections[key].length) {
-        result.push({ key, content: sections[key].join("\n\n") });
-      }
-    });
-    return result.length >= 2 ? result : null;
-  }
-
-  function isHowParagraph(p) {
-    return /^(Interview|Practical|Real pattern|Migration|When to mention|Common trap|Android practice|Best practice|Choose by|Interview tip)/i.test(
-      p
-    );
-  }
-
-  /** Infer What / Why / How from paragraph flow */
-  function inferSections(text) {
-    const paras = splitParagraphs(text);
-    if (!paras.length) return [];
-
-    const howStart = paras.findIndex(isHowParagraph);
-    let howParas = [];
-    let core = paras;
-
-    if (howStart >= 0) {
-      howParas = paras.slice(howStart);
-      core = paras.slice(0, howStart);
-    } else if (paras.length >= 4) {
-      howParas = [paras[paras.length - 1]];
-      core = paras.slice(0, -1);
-    }
-
-    if (core.length === 1) {
-      const only = core[0];
-      if (howParas.length) {
-        return [
-          { key: "what", content: only },
-          { key: "how", content: howParas.join("\n\n") },
-        ];
-      }
-      return [{ key: "what", content: only }];
-    }
-
-    if (core.length === 2) {
-      return [
-        { key: "what", content: core[0] },
-        { key: "why", content: core[1] },
-        ...(howParas.length ? [{ key: "how", content: howParas.join("\n\n") }] : []),
-      ];
-    }
-
-    if (core.length === 3 && !howParas.length) {
-      return [
-        { key: "what", content: core[0] },
-        { key: "why", content: core[1] },
-        { key: "how", content: core[2] },
-      ];
-    }
-
-    const what = core[0];
-    const whyEnd = howParas.length ? core.length : core.length - 1;
-    const why = core.slice(1, whyEnd).join("\n\n");
-    const result = [
-      { key: "what", content: what },
-      { key: "why", content: why },
-    ];
-    if (howParas.length) {
-      result.push({ key: "how", content: howParas.join("\n\n") });
-    } else if (core.length > 3) {
-      result.push({ key: "how", content: core[core.length - 1] });
-    }
-    return result;
-  }
+  const wwh = () =>
+    typeof WwhStructure !== "undefined"
+      ? WwhStructure
+      : { parseExplicitSections: () => null, inferSections: () => [] };
 
   function isCodeLine(line) {
     return /^\s*(val |var |fun |class |interface |object |import |package |@|if \(|for \(|try |catch |private |public |void |int |String|List<|Mutable|suspend |viewModelScope|data class)/.test(
@@ -267,20 +156,27 @@
   function formatAnswer(text, lang) {
     if (!text) return "";
 
+    const { parseExplicitSections, inferSections } = wwh();
     const explicit = parseExplicitSections(text);
     const sections = explicit || inferSections(text);
 
     if (!sections.length) return "";
 
-    if (sections.length === 1 && sections[0].key === "what") {
-      return `<div class="iqa-structured iqa-structured-single">${renderSectionCard(sections[0], lang)}</div>`;
+    // Prefer full What → Why → How layout when all three sections exist
+    const order = ["what", "why", "how"];
+    const ordered = order
+      .map((key) => sections.find((s) => s.key === key))
+      .filter(Boolean);
+
+    if (ordered.length === 1 && ordered[0].key === "what") {
+      return `<div class="iqa-structured iqa-structured-single">${renderSectionCard(ordered[0], lang)}</div>`;
     }
 
     return `
       <div class="iqa-structured">
-        ${renderNav(sections, lang)}
+        ${renderNav(ordered, lang)}
         <div class="iqa-wwh-grid">
-          ${sections.map((s) => renderSectionCard(s, lang)).join("")}
+          ${ordered.map((s) => renderSectionCard(s, lang)).join("")}
         </div>
       </div>
     `;

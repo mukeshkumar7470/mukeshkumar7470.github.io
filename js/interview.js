@@ -12,8 +12,15 @@
 
   if (!listEl) return;
 
+  const STORAGE_CAT = "interview-active-category";
+  const bodyCache = new Map();
+  const itemById = new Map();
+
   let activeCategory = "all";
   let expandAll = false;
+  let listHooksBound = false;
+  let ttsListBound = false;
+  let hydrateQueue = null;
 
   function escapeHtml(text) {
     const div = document.createElement("div");
@@ -34,21 +41,25 @@
       .join("");
   }
 
-  function getAllItems() {
-    const items = [];
+  function indexItems() {
+    itemById.clear();
     INTERVIEW_QA.forEach((cat) => {
       cat.items.forEach((item, index) => {
-        items.push({
+        const globalId = `${cat.id}-${index + 1}`;
+        itemById.set(globalId, {
           ...item,
           categoryId: cat.id,
           categoryLabel: cat.label,
           categoryIcon: cat.icon,
           num: index + 1,
-          globalId: `${cat.id}-${index + 1}`,
+          globalId,
         });
       });
     });
-    return items;
+  }
+
+  function getAllItems() {
+    return Array.from(itemById.values());
   }
 
   function matchesQuery(item, query) {
@@ -71,11 +82,17 @@
     return "";
   }
 
-  function renderAccordion(item) {
-    const openAttr = expandAll ? " open" : "";
+  function ttsSupported() {
+    return typeof InterviewTTS !== "undefined" && InterviewTTS.supported();
+  }
+
+  function buildBodyHtml(item) {
+    const cached = bodyCache.get(item.globalId);
+    if (cached) return cached;
+
     const visual = renderVisualBlock(item);
-    const ttsSupported = typeof InterviewTTS !== "undefined" && InterviewTTS.supported();
-    const ttsBlock = ttsSupported
+    const ttsOn = ttsSupported();
+    const ttsBlock = ttsOn
       ? `
           <div class="iqa-tts-row" role="group" aria-label="Listen to this question">
             <span class="iqa-tts-row-label"><i class="fa-solid fa-headphones"></i> Listen</span>
@@ -86,20 +103,7 @@
           </div>`
       : "";
 
-    return `
-      <details class="iqa-item" data-category="${item.categoryId}" data-id="${item.globalId}"${openAttr}>
-        <summary class="iqa-summary">
-          <span class="iqa-num">${item.num}</span>
-          <span class="iqa-title">${escapeHtml(item.q)}</span>
-          <span class="iqa-cat-badge">${escapeHtml(item.categoryLabel)}</span>
-          ${
-            ttsSupported
-              ? `<span class="iqa-summary-tts">${ttsBtn("question", "Listen question", "fa-solid fa-volume-high")}</span>`
-              : ""
-          }
-          <i class="fa-solid fa-chevron-down iqa-chevron" aria-hidden="true"></i>
-        </summary>
-        <div class="iqa-body">
+    const html = `
           ${visual}
           ${ttsBlock}
           <div class="iqa-body-layout">
@@ -107,7 +111,7 @@
               <div class="iqa-answer-head iqa-en">
                 <h4><i class="fa-solid fa-microphone"></i> Interview answer</h4>
                 <div class="iqa-answer-head-actions">
-                  ${ttsSupported ? ttsBtn("en", "Listen English", "fa-solid fa-volume-high") : ""}
+                  ${ttsOn ? ttsBtn("en", "Listen English", "fa-solid fa-volume-high") : ""}
                   <span class="iqa-answer-badge">English · What → Why → How</span>
                 </div>
               </div>
@@ -117,13 +121,103 @@
               <div class="iqa-answer-head iqa-hi">
                 <h4><i class="fa-solid fa-book-open"></i> Deep explanation</h4>
                 <div class="iqa-answer-head-actions">
-                  ${ttsSupported ? ttsBtn("hi", "Listen Hindi", "fa-solid fa-language") : ""}
+                  ${ttsOn ? ttsBtn("hi", "Listen Hindi", "fa-solid fa-language") : ""}
                   <span class="iqa-answer-badge">Hindi · क्या → क्यों → कैसे</span>
                 </div>
               </div>
               <div class="iqa-answer-content iqa-hi">${formatAnswer(item.hi, "hi")}</div>
             </section>
-          </div>
+          </div>`;
+
+    bodyCache.set(item.globalId, html);
+    return html;
+  }
+
+  function hydrateItem(details) {
+    const body = details.querySelector(".iqa-body");
+    if (!body || body.dataset.hydrated === "1") return;
+
+    const item = itemById.get(details.dataset.id);
+    if (!item) return;
+
+    body.innerHTML = buildBodyHtml(item);
+    body.dataset.hydrated = "1";
+    delete body.dataset.lazy;
+
+    if (typeof InterviewAnswerFormat !== "undefined") {
+      InterviewAnswerFormat.bindScrollChips(body);
+    }
+    if (details.open && typeof InterviewVisuals !== "undefined") {
+      InterviewVisuals.playItemAnimation(details);
+    }
+  }
+
+  function bindListHooks() {
+    if (listHooksBound) return;
+    listHooksBound = true;
+
+    listEl.addEventListener(
+      "toggle",
+      (e) => {
+        const details = e.target;
+        if (!details.classList?.contains("iqa-item") || !details.open) return;
+        hydrateItem(details);
+      },
+      true
+    );
+  }
+
+  function cancelHydrateQueue() {
+    if (hydrateQueue) {
+      cancelAnimationFrame(hydrateQueue);
+      hydrateQueue = null;
+    }
+  }
+
+  function scheduleHydrateOpenItems() {
+    cancelHydrateQueue();
+    const pending = Array.from(listEl.querySelectorAll('.iqa-item[open] .iqa-body[data-lazy="1"]'));
+    if (!pending.length) return;
+
+    let i = 0;
+    const batch = 4;
+
+    function step() {
+      const slice = pending.slice(i, i + batch);
+      slice.forEach((body) => {
+        const details = body.closest(".iqa-item");
+        if (details) hydrateItem(details);
+      });
+      i += batch;
+      if (i < pending.length) {
+        hydrateQueue = requestAnimationFrame(step);
+      } else {
+        hydrateQueue = null;
+      }
+    }
+
+    hydrateQueue = requestAnimationFrame(step);
+  }
+
+  function renderAccordionShell(item) {
+    const openAttr = expandAll ? " open" : "";
+    const ttsOn = ttsSupported();
+
+    return `
+      <details class="iqa-item" data-category="${item.categoryId}" data-id="${item.globalId}"${openAttr}>
+        <summary class="iqa-summary">
+          <span class="iqa-num">${item.num}</span>
+          <span class="iqa-title">${escapeHtml(item.q)}</span>
+          <span class="iqa-cat-badge">${escapeHtml(item.categoryLabel)}</span>
+          ${
+            ttsOn
+              ? `<span class="iqa-summary-tts">${ttsBtn("question", "Listen question", "fa-solid fa-volume-high")}</span>`
+              : ""
+          }
+          <i class="fa-solid fa-chevron-down iqa-chevron" aria-hidden="true"></i>
+        </summary>
+        <div class="iqa-body" data-lazy="1" aria-busy="true">
+          <p class="iqa-body-placeholder">Open to load answer, visual, and listen controls…</p>
         </div>
       </details>
     `;
@@ -133,21 +227,18 @@
     if (typeof InterviewTTS !== "undefined" && InterviewTTS.isPlaying()) {
       InterviewTTS.stop();
     }
+    cancelHydrateQueue();
 
     let total = 0;
     let html = "";
 
     categories.forEach((cat) => {
       const filtered = cat.items
-        .map((item, index) => ({
-          ...item,
-          categoryId: cat.id,
-          categoryLabel: cat.label,
-          categoryIcon: cat.icon,
-          num: index + 1,
-          globalId: `${cat.id}-${index + 1}`,
-        }))
-        .filter((item) => matchesQuery(item, query));
+        .map((item, index) => {
+          const globalId = `${cat.id}-${index + 1}`;
+          return itemById.get(globalId);
+        })
+        .filter((item) => item && matchesQuery(item, query));
 
       if (!filtered.length) return;
 
@@ -159,7 +250,7 @@
             <span class="iqa-group-count">${filtered.length}</span>
           </h3>
           <div class="iqa-group-list">
-            ${filtered.map(renderAccordion).join("")}
+            ${filtered.map(renderAccordionShell).join("")}
           </div>
         </div>
       `;
@@ -175,17 +266,9 @@
 
     if (typeof InterviewVisuals !== "undefined") {
       InterviewVisuals.bindVisualAnimations(listEl);
-      if (expandAll) {
-        listEl.querySelectorAll(".iqa-item[open]").forEach((d) => {
-          InterviewVisuals.playItemAnimation(d);
-        });
-      }
     }
-    if (typeof InterviewAnswerFormat !== "undefined") {
-      InterviewAnswerFormat.bindScrollChips(listEl);
-    }
-    if (typeof InterviewTTS !== "undefined") {
-      InterviewTTS.bindList(listEl);
+    if (expandAll) {
+      scheduleHydrateOpenItems();
     }
   }
 
@@ -198,12 +281,22 @@
     renderGrouped(cats, query);
   }
 
+  function setActiveCategory(catId) {
+    activeCategory = catId;
+    try {
+      sessionStorage.setItem(STORAGE_CAT, catId);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
   function buildTabs() {
     if (!tabsEl) return;
     const total = getAllItems().length;
-    let html = `<button type="button" class="interview-tab active" data-cat="all">All <span>${total}</span></button>`;
+    let html = `<button type="button" class="interview-tab${activeCategory === "all" ? " active" : ""}" data-cat="all">All <span>${total}</span></button>`;
     INTERVIEW_QA.forEach((cat) => {
-      html += `<button type="button" class="interview-tab" data-cat="${cat.id}">
+      const active = activeCategory === cat.id ? " active" : "";
+      html += `<button type="button" class="interview-tab${active}" data-cat="${cat.id}">
         <i class="${cat.icon}"></i> ${cat.label} <span>${cat.items.length}</span>
       </button>`;
     });
@@ -213,10 +306,21 @@
       btn.addEventListener("click", () => {
         tabsEl.querySelectorAll(".interview-tab").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        activeCategory = btn.dataset.cat;
+        setActiveCategory(btn.dataset.cat);
         render();
       });
     });
+  }
+
+  function restoreCategory() {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_CAT);
+      if (saved && (saved === "all" || INTERVIEW_QA.some((c) => c.id === saved))) {
+        activeCategory = saved;
+      }
+    } catch (_) {
+      /* ignore */
+    }
   }
 
   if (searchEl) {
@@ -245,8 +349,15 @@
 
   if (typeof InterviewTTS !== "undefined") {
     InterviewTTS.bindToolbar();
+    if (!ttsListBound) {
+      InterviewTTS.bindList(listEl);
+      ttsListBound = true;
+    }
   }
 
+  indexItems();
+  bindListHooks();
+  restoreCategory();
   buildTabs();
   render();
 })();

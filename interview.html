@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Interview Prep — Mukesh Kumar Patel</title>
-  <meta name="description" content="123 Java, Kotlin, Android, DSA and Senior Architecture interview Q&A with English answers and Hindi explanations.">
+  <meta name="description" content="124 Java, Kotlin, Android, DSA and Senior Architecture interview Q&A with English answers and Hindi explanations.">
   <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6ee7b7">
@@ -15,9 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/interview-animations.css">
-  <link rel="stylesheet" href="css/interview-answers.css">
-  <link rel="stylesheet" href="css/interview-tts.css">
+  <link rel="stylesheet" href="css/interview.css">
 </head>
 <body class="interview-page">
   <div class="bg-mesh" aria-hidden="true"></div>
@@ -36,7 +34,7 @@
       <div class="interview-bottom-header reveal visible">
         <span class="section-tag">Interview Prep</span>
         <h1>Java, Kotlin, Android & Architecture Q&A</h1>
-        <p class="section-desc">123 in-depth interview questions — <strong>What → Why → How</strong> cards, visuals, and <strong>text-to-speech</strong> to listen in English or Hindi while you revise.</p>
+        <p class="section-desc">124 in-depth interview questions — <strong>What → Why → How</strong> cards, visuals, and <strong>text-to-speech</strong> to listen in English or Hindi while you revise.</p>
       </div>
 
       <div class="interview-toolbar reveal visible">
@@ -121,7 +119,7 @@
     id="interviewPlayerMusic"
     playsinline
     webkit-playsinline
-    preload="auto"
+    preload="none"
     hidden
     aria-hidden="true"
   ></audio>
@@ -131,7 +129,7 @@
     loop
     playsinline
     webkit-playsinline
-    preload="auto"
+    preload="none"
     hidden
     aria-hidden="true"
   ></audio>
@@ -176,12 +174,13 @@
   <script>
     window.INTERVIEW_TTS_PROXY = "";
   </script>
-  <script src="js/interview-data.js"></script>
-  <script src="js/interview-visuals.js"></script>
-  <script src="js/interview-answer-format.js"></script>
-  <script src="js/interview-music-audio.js"></script>
-  <script src="js/interview-tts.js"></script>
-  <script src="js/interview.js"></script>
+  <script src="js/interview-data.js" defer></script>
+  <script src="js/wwh-structure.js" defer></script>
+  <script src="js/interview-visuals.js" defer></script>
+  <script src="js/interview-answer-format.js" defer></script>
+  <script src="js/interview-music-audio.js" defer></script>
+  <script src="js/interview-tts.js" defer></script>
+  <script src="js/interview.js" defer></script>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
