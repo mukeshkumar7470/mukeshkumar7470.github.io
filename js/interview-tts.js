@@ -28,6 +28,14 @@
   let highlightRoot = null;
   const htmlBackup = new WeakMap();
 
+  const player = {
+    tracks: [],
+    index: 0,
+    mode: "en",
+    paused: false,
+    active: false,
+  };
+
   function supported() {
     return typeof window !== "undefined" && "speechSynthesis" in window;
   }
@@ -232,15 +240,199 @@
     tick();
   }
 
-  /** Cancel current speech and return new session id */
+  function partLabel(target) {
+    if (target === "question") return "Question";
+    if (target === "hi") return "Hindi";
+    return "English";
+  }
+
+  function partToTtsMode(target) {
+    if (target === "question") return "question";
+    if (target === "hi") return "hi";
+    return "en";
+  }
+
+  function getVisibleItemElements() {
+    return Array.from(document.querySelectorAll("#interviewList .iqa-item"));
+  }
+
+  function buildPlaylist(startGlobalId, mode) {
+    const tracks = [];
+    let startIndex = 0;
+    let foundStart = false;
+
+    getVisibleItemElements().forEach((itemEl) => {
+      const globalId = itemEl.dataset.id;
+      const questionText = itemEl.querySelector(".iqa-title")?.textContent?.trim() || "";
+      const item = resolveItem(globalId);
+      if (!item) return;
+
+      buildParts(mode, item, questionText).forEach((part) => {
+        if (!part.text) return;
+        if (globalId === startGlobalId && !foundStart) {
+          startIndex = tracks.length;
+          foundStart = true;
+        }
+        tracks.push({
+          globalId,
+          questionText,
+          item,
+          part,
+          label: partLabel(part.target),
+        });
+      });
+    });
+
+    if (!foundStart && tracks.length) startIndex = 0;
+    return { tracks, startIndex };
+  }
+
+  function showPlayerBar() {
+    const el = document.getElementById("interviewPlayer");
+    if (el) el.hidden = false;
+    document.body.classList.add("player-active");
+    player.active = true;
+  }
+
+  function hidePlayerBar() {
+    const el = document.getElementById("interviewPlayer");
+    if (el) el.hidden = true;
+    document.body.classList.remove("player-active");
+    player.active = false;
+    updatePlayPauseIcon(false, false);
+    clearMediaSession();
+  }
+
+  function updatePlayPauseIcon(playing, paused) {
+    const icon = document.getElementById("interviewPlayerPlayPauseIcon");
+    const btn = document.getElementById("interviewPlayerPlayPause");
+    if (!icon || !btn) return;
+    icon.className = playing && !paused ? "fa-solid fa-pause" : "fa-solid fa-play";
+    btn.classList.toggle("is-paused", paused);
+    btn.setAttribute("aria-label", playing && !paused ? "Pause" : "Play");
+  }
+
+  function updatePlayerUI(track) {
+    const title = document.getElementById("interviewPlayerTitle");
+    const part = document.getElementById("interviewPlayerPart");
+    const idx = document.getElementById("interviewPlayerIndex");
+    if (title) title.textContent = track?.questionText || "—";
+    if (part) part.textContent = track?.label || "—";
+    if (idx) {
+      idx.textContent = `${player.tracks.length ? player.index + 1 : 0} / ${player.tracks.length}`;
+    }
+    updatePlayPauseIcon(true, player.paused);
+    setMediaSession(track);
+
+    const prevBtn = document.getElementById("interviewPlayerPrev");
+    const nextBtn = document.getElementById("interviewPlayerNext");
+    if (prevBtn) prevBtn.disabled = player.index <= 0;
+    if (nextBtn) nextBtn.disabled = player.index >= player.tracks.length - 1;
+  }
+
+  function setMediaSession(track) {
+    if (!("mediaSession" in navigator) || !track) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track.questionText,
+      artist: `Interview Prep · ${track.label}`,
+      album: "Mukesh Kumar Patel",
+    });
+    navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
+  }
+
+  function clearMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+    navigator.mediaSession.playbackState = "none";
+    navigator.mediaSession.metadata = null;
+  }
+
+  function bindMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.setActionHandler("play", () => resumePlayback());
+      navigator.mediaSession.setActionHandler("pause", () => pausePlayback());
+      navigator.mediaSession.setActionHandler("previoustrack", () => playerPrev());
+      navigator.mediaSession.setActionHandler("nexttrack", () => playerNext());
+      navigator.mediaSession.setActionHandler("stop", () => stopPlayer());
+    } catch (_) {
+      /* Some browsers reject handlers */
+    }
+  }
+
+  /** Cancel speech; return new session id */
   function abortPlayback() {
     generation += 1;
     hardCancelSpeech();
     clearFallbackTimer();
     if (activeItem) restoreAllHighlights(activeItem);
     clearActiveUi();
-    updateGlobalStop(false);
     return generation;
+  }
+
+  function stopPlayer() {
+    player.tracks = [];
+    player.index = 0;
+    player.paused = false;
+    abortPlayback();
+    hidePlayerBar();
+  }
+
+  function pausePlayback() {
+    const syn = synth();
+    if (!player.active) return;
+    if (syn.speaking && !syn.paused) {
+      syn.pause();
+      player.paused = true;
+      clearFallbackTimer();
+      updatePlayPauseIcon(true, true);
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+    }
+  }
+
+  function resumePlayback() {
+    const syn = synth();
+    if (!player.active) return;
+    if (syn.paused) {
+      syn.resume();
+      player.paused = false;
+      updatePlayPauseIcon(true, false);
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+      return;
+    }
+    if (!syn.speaking && !syn.pending) {
+      playCurrentTrack();
+    }
+  }
+
+  function togglePlayPause() {
+    const syn = synth();
+    if (player.paused || syn.paused) resumePlayback();
+    else if (syn.speaking || syn.pending || activeBtn) pausePlayback();
+    else playCurrentTrack();
+  }
+
+  function playerPrev() {
+    if (!player.tracks.length) return;
+    player.index = Math.max(0, player.index - 1);
+    player.paused = false;
+    playCurrentTrack();
+  }
+
+  function playerNext() {
+    if (!player.tracks.length) return;
+    if (player.index >= player.tracks.length - 1) {
+      stopPlayer();
+      return;
+    }
+    player.index += 1;
+    player.paused = false;
+    playCurrentTrack();
+  }
+
+  async function waitWhilePaused(session) {
+    while (player.paused && isSessionActive(session)) {
+      await new Promise((r) => setTimeout(r, 150));
+    }
   }
 
   function resolveItem(globalId) {
@@ -380,27 +572,21 @@
     if (itemEl) itemEl.classList.add("iqa-tts-item-active");
   }
 
-  function finishPlayback(session) {
+  function finishTrack(session) {
     if (!isSessionActive(session)) return;
     if (highlightRoot) markLiveComplete(highlightRoot);
     if (activeItem) restoreAllHighlights(activeItem);
     clearFallbackTimer();
     clearActiveUi();
-    updateGlobalStop(false);
   }
 
   function stop() {
-    abortPlayback();
+    stopPlayer();
   }
 
   function isPlaying() {
     const syn = synth();
-    return !!(activeBtn || syn.speaking || syn.pending);
-  }
-
-  function updateGlobalStop(visible) {
-    const bar = document.getElementById("interviewTtsBar");
-    if (bar) bar.hidden = !visible;
+    return !!(player.active || activeBtn || syn.speaking || syn.pending);
   }
 
   function speakOneChunk(text, lang, session, rootEl, chunkOffset, fullPartText) {
@@ -451,7 +637,7 @@
       u.onend = () => finish(true);
       u.onerror = () => finish(false);
 
-      synth().speak(u);
+      speakWhenReady(u, session);
 
       setTimeout(() => {
         if (!settled && isSessionActive(session) && !synth().speaking && !synth().pending) {
@@ -472,10 +658,24 @@
     return offsets;
   }
 
+  function speakWhenReady(utterance, session) {
+    const trySpeak = () => {
+      if (!isSessionActive(session) || !player.active) return;
+      if (player.paused) {
+        setTimeout(trySpeak, 200);
+        return;
+      }
+      synth().speak(utterance);
+    };
+    trySpeak();
+  }
+
   async function speakChunks(chunks, lang, session, rootEl, part) {
     const offsets = chunkStartOffsets(part.text, chunks);
 
     for (let i = 0; i < chunks.length; i += 1) {
+      if (!isSessionActive(session)) return false;
+      await waitWhilePaused(session);
       if (!isSessionActive(session)) return false;
       const ok = await speakOneChunk(
         chunks[i],
@@ -493,35 +693,70 @@
     return isSessionActive(session);
   }
 
-  async function runPlayback(parts, btn, itemEl, session) {
-    if (!isSessionActive(session)) return;
+  async function runSingleTrack(track, itemEl, session, btn) {
+    if (!isSessionActive(session) || !track) return;
 
-    const queue = parts.filter((p) => p.text);
+    const part = track.part;
+    const rootEl = getHighlightTarget(itemEl, part.target);
+    if (!rootEl) return;
+
     setActiveUi(btn, itemEl);
-    updateGlobalStop(true);
+    updatePlayerUI(track);
 
-    for (let i = 0; i < queue.length; i += 1) {
-      if (!isSessionActive(session)) return;
+    const spokenText = stripForSpeech(rootEl.innerText) || part.text;
+    part.text = spokenText;
+    prepareInlineHighlight(itemEl, part.target);
+    const chunks = chunkText(spokenText, 280);
+    const ok = await speakChunks(chunks, part.lang, session, rootEl, part);
+    if (!ok || !isSessionActive(session)) return;
 
-      const part = queue[i];
-      const rootEl = getHighlightTarget(itemEl, part.target);
-      if (!rootEl) continue;
+    markLiveComplete(rootEl);
+    finishTrack(session);
 
-      const spokenText = stripForSpeech(rootEl.innerText) || part.text;
-      part.text = spokenText;
-      prepareInlineHighlight(itemEl, part.target);
-      const chunks = chunkText(spokenText, 280);
-      const ok = await speakChunks(chunks, part.lang, session, rootEl, part);
-      if (!ok) return;
+    if (!player.active || player.paused) return;
 
-      if (isSessionActive(session)) markLiveComplete(rootEl);
+    if (player.index < player.tracks.length - 1) {
+      player.index += 1;
+      await waitSynthIdle();
+      if (player.active) playCurrentTrack();
+    } else {
+      stopPlayer();
+    }
+  }
 
-      if (i < queue.length - 1) {
-        await new Promise((r) => setTimeout(r, CHUNK_GAP_MS));
-      }
+  function queryItemEl(globalId) {
+    const safe = String(globalId).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    return document.querySelector(`.iqa-item[data-id="${safe}"]`);
+  }
+
+  function playCurrentTrack() {
+    const track = player.tracks[player.index];
+    if (!track) {
+      stopPlayer();
+      return;
     }
 
-    finishPlayback(session);
+    const itemEl = queryItemEl(track.globalId);
+    if (itemEl) itemEl.open = true;
+
+    const session = abortPlayback();
+    player.paused = false;
+    showPlayerBar();
+    updatePlayerUI(track);
+
+    const btn = itemEl?.querySelector(
+      `.iqa-tts-btn[data-tts="${partToTtsMode(track.part.target)}"]`
+    );
+
+    startChain = startChain
+      .then(() => waitSynthIdle())
+      .then(() => {
+        if (!player.active) return;
+        return runSingleTrack(track, itemEl, session, btn || null);
+      })
+      .catch(() => {
+        if (player.active) stopPlayer();
+      });
   }
 
   function buildParts(mode, item, questionText) {
@@ -556,28 +791,31 @@
       return;
     }
 
-    if (btn?.classList.contains("iqa-tts-active")) {
-      abortPlayback();
+    const sameTrack =
+      player.active &&
+      player.tracks[player.index]?.globalId === globalId &&
+      player.mode === mode;
+
+    if (btn?.classList.contains("iqa-tts-active") || (sameTrack && isPlaying())) {
+      togglePlayPause();
       return;
     }
 
     const item = resolveItem(globalId);
     if (!item) return;
 
-    const parts = buildParts(mode, item, questionText);
-    if (!parts.some((p) => p.text)) return;
+    const { tracks, startIndex } = buildPlaylist(globalId, mode);
+    if (!tracks.length) return;
 
-    const session = abortPlayback();
+    player.tracks = tracks;
+    player.index = startIndex;
+    player.mode = mode;
+    player.paused = false;
+    player.active = true;
 
-    startChain = startChain
-      .then(() => waitSynthIdle())
-      .then(() => {
-        if (!isSessionActive(session)) return;
-        return runPlayback(parts, btn, itemEl, session);
-      })
-      .catch(() => {
-        if (isSessionActive(session)) finishPlayback(session);
-      });
+    if (itemEl && !itemEl.open) itemEl.open = true;
+
+    playCurrentTrack();
   }
 
   function fillVoiceSelect(selectEl, lang) {
@@ -664,13 +902,20 @@
     }
 
     populateVoiceDropdowns();
+    bindPlayerControls();
+    bindMediaSession();
+  }
 
-    const stopBtn = document.getElementById("interviewTtsStop");
-    if (stopBtn) stopBtn.addEventListener("click", stop);
+  function bindPlayerControls() {
+    const prev = document.getElementById("interviewPlayerPrev");
+    const next = document.getElementById("interviewPlayerNext");
+    const playPause = document.getElementById("interviewPlayerPlayPause");
+    const stopBtn = document.getElementById("interviewPlayerStop");
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden && isPlaying()) stop();
-    });
+    if (prev) prev.addEventListener("click", playerPrev);
+    if (next) next.addEventListener("click", playerNext);
+    if (playPause) playPause.addEventListener("click", togglePlayPause);
+    if (stopBtn) stopBtn.addEventListener("click", stopPlayer);
   }
 
   function bindList(root) {
@@ -700,8 +945,8 @@
     root.addEventListener("toggle", (e) => {
       const details = e.target;
       if (details.tagName !== "DETAILS") return;
-      if (!details.open && activeItem === details) {
-        abortPlayback();
+      if (!details.open && activeItem === details && player.active) {
+        stopPlayer();
       }
     }, true);
   }
@@ -715,12 +960,16 @@
 
   global.InterviewTTS = {
     supported,
-    stop,
+    stop: stopPlayer,
     isPlaying,
     bindToolbar,
     bindList,
     ttsButton,
     initVoices,
+    pause: pausePlayback,
+    resume: resumePlayback,
+    next: playerNext,
+    prev: playerPrev,
   };
 
   initVoices();

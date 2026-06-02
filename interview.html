@@ -54,7 +54,7 @@
         <span class="interview-tts-toolbar-title">
           <i class="fa-solid fa-headphones" aria-hidden="true"></i> Text to speech
         </span>
-        <span class="interview-tts-hint">🇮🇳 <strong>Indian tone</strong> — English uses <em>en-IN</em>, Hindi uses <em>hi-IN</em>. Another topic stops current speech.</span>
+        <span class="interview-tts-hint">🇮🇳 Indian tone · <strong>Background player</strong> at bottom — pause, next/prev per question &amp; answer.</span>
         <div class="interview-tts-controls">
           <div class="interview-tts-rate-wrap">
             <label for="interviewTtsVoiceEn">English voice</label>
@@ -91,7 +91,7 @@
           <i class="fa-solid fa-lightbulb"></i>
           <div>
             <strong>How to read</strong>
-            <p>Use <strong>Listen</strong> — words highlight in the <strong>question and answers</strong> as they play.</p>
+            <p>Use <strong>Listen</strong> or the <strong>bottom player</strong> — plays in the background with pause, next, and previous per question/answer.</p>
           </div>
         </div>
         <div class="prep-card">
@@ -107,11 +107,31 @@
     </div>
   </main>
 
-  <div class="interview-tts-bar" id="interviewTtsBar" hidden>
-    <span><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Speaking…</span>
-    <button type="button" class="btn btn-outline btn-sm" id="interviewTtsStop">
-      <i class="fa-solid fa-stop"></i> Stop
-    </button>
+  <div class="interview-player" id="interviewPlayer" hidden aria-label="Interview audio player">
+    <div class="interview-player-inner">
+      <div class="interview-player-info">
+        <p class="interview-player-title" id="interviewPlayerTitle">—</p>
+        <p class="interview-player-meta">
+          <span id="interviewPlayerPart">English</span>
+          <span class="interview-player-sep">·</span>
+          <span id="interviewPlayerIndex">0 / 0</span>
+        </p>
+      </div>
+      <div class="interview-player-controls" role="group" aria-label="Playback controls">
+        <button type="button" class="interview-player-btn" id="interviewPlayerPrev" title="Previous" aria-label="Previous">
+          <i class="fa-solid fa-backward-step" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="interview-player-btn interview-player-btn-main" id="interviewPlayerPlayPause" title="Play / Pause" aria-label="Play">
+          <i class="fa-solid fa-play" id="interviewPlayerPlayPauseIcon" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="interview-player-btn" id="interviewPlayerStop" title="Stop" aria-label="Stop">
+          <i class="fa-solid fa-stop" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="interview-player-btn" id="interviewPlayerNext" title="Next" aria-label="Next">
+          <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
   </div>
 
   <footer class="footer">

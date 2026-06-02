@@ -924,6 +924,14 @@ body:hover .cursor-glow { opacity: 1; }
   padding-bottom: 3rem;
 }
 
+.interview-page.player-active .interview-page-main {
+  padding-bottom: 6.5rem;
+}
+
+.interview-page.player-active .footer {
+  margin-bottom: 5rem;
+}
+
 .interview-page .interview-bottom-header {
   margin-top: 1.5rem;
   margin-bottom: 2.5rem;
