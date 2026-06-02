@@ -1202,8 +1202,13 @@ body:hover .cursor-glow { opacity: 1; }
 }
 
 .iqa-body {
-  padding: 0 1.25rem 1.25rem;
+  padding: 0 1rem 1.25rem;
   border-top: 1px solid var(--border);
+}
+
+.iqa-body .iqa-visual {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
 }
 
 .iqa-block {

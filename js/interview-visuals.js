@@ -16,6 +16,7 @@
     [/synchronized|volatile/i, "threads"],
     [/reflection/i, "reflection"],
     [/comparable|comparator/i, "sort"],
+    [/what is kotlin/i, "kotlin-what"],
     [/why kotlin|kotlin over java/i, "kotlin-logo"],
     [/val vs var|const/i, "val-var"],
     [/data class|sealed|object/i, "sealed"],
@@ -161,6 +162,16 @@
       <div class="vis-sort">
         <div class="vis-bar b1"></div><div class="vis-bar b2"></div><div class="vis-bar b3"></div>
         <div class="vis-bar b4 vis-sorted"></div>
+      </div>`,
+    "kotlin-what": `
+      <div class="vis-kotlin-what">
+        <div class="vis-kw-step">Kotlin</div>
+        <div class="vis-kw-arrow">↓</div>
+        <div class="vis-kw-step">Compiler</div>
+        <div class="vis-kw-arrow">↓</div>
+        <div class="vis-kw-step">Bytecode</div>
+        <div class="vis-kw-arrow">↓</div>
+        <div class="vis-kw-step vis-kw-art">ART</div>
       </div>`,
     "kotlin-logo": `
       <div class="vis-kotlin">
@@ -476,6 +487,7 @@
     threads: "Thread synchronization",
     reflection: "Runtime class inspection",
     sort: "Ordering elements",
+    "kotlin-what": "Kotlin compile pipeline to ART",
     "kotlin-logo": "Kotlin → Android",
     "val-var": "val locked vs var mutable",
     sealed: "Sealed UI states",
@@ -538,6 +550,13 @@
   };
 
   const TEACHING_OVERRIDES = {
+    "kotlin-what": {
+      diagram: "Kotlin source\n    |\n    v\nKotlin Compiler (static types checked)\n    |\n    v\nJVM Bytecode\n    |\n    v\nAndroid Runtime (ART)",
+      analogy: "Kotlin is like a translator that writes your app logic in a safer, shorter language, then converts it into a format Android already understands (bytecode).",
+      mistakes: ["Saying Kotlin replaces the JVM on Android — it still runs as bytecode on ART", "Thinking statically typed means no type inference", "Ignoring Java interop during migration"],
+      example: "val name: String = \"Mukesh\"\nval age: Int = 25\n\n// Type inference — same result, less syntax\nval city = \"Bhopal\"  // inferred String",
+      storyboard: ["Write Kotlin in IDE", "Compiler checks types", "Generate bytecode", "ART runs on device", "Fewer NPEs vs old Java patterns"],
+    },
     mvvm: {
       diagram: "User action\n   |\n   v\nView/Compose -> ViewModel -> UseCase/Repository -> API/Room\n   ^              |\n   |              v\n   +--------- StateFlow/LiveData",
       analogy: "Think of MVVM like a restaurant: View is the waiter, ViewModel is the order manager, Repository is the kitchen/store room. The waiter should not cook food; the View should not contain business logic.",
@@ -680,6 +699,12 @@
       title: "Flow official documentation",
       figure: "Asynchronous Flow examples",
       url: "https://kotlinlang.org/docs/flow.html",
+      source: "Kotlin Documentation",
+    },
+    "kotlin-what": {
+      title: "Kotlin official getting started",
+      figure: "What is Kotlin — language overview",
+      url: "https://kotlinlang.org/docs/getting-started.html",
       source: "Kotlin Documentation",
     },
     coroutine: {

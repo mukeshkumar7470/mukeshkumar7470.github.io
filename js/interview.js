@@ -21,7 +21,10 @@
     return div.innerHTML;
   }
 
-  function formatAnswer(text) {
+  function formatAnswer(text, lang) {
+    if (typeof InterviewAnswerFormat !== "undefined") {
+      return InterviewAnswerFormat.formatAnswer(text, lang);
+    }
     if (!text) return "";
     return text
       .split(/\n\n+/)
@@ -74,13 +77,21 @@
         </summary>
         <div class="iqa-body">
           ${visual}
-          <div class="iqa-block iqa-en">
-            <h4><i class="fa-solid fa-microphone"></i> Interview answer (English)</h4>
-            <div class="iqa-text">${formatAnswer(item.en)}</div>
-          </div>
-          <div class="iqa-block iqa-hi">
-            <h4><i class="fa-solid fa-book-open"></i> Deep explanation (Hindi)</h4>
-            <div class="iqa-text">${formatAnswer(item.hi)}</div>
+          <div class="iqa-body-layout">
+            <section class="iqa-answer-panel">
+              <div class="iqa-answer-head iqa-en">
+                <h4><i class="fa-solid fa-microphone"></i> Interview answer</h4>
+                <span class="iqa-answer-badge">English · What → Why → How</span>
+              </div>
+              <div class="iqa-answer-content iqa-en">${formatAnswer(item.en, "en")}</div>
+            </section>
+            <section class="iqa-answer-panel">
+              <div class="iqa-answer-head iqa-hi">
+                <h4><i class="fa-solid fa-book-open"></i> Deep explanation</h4>
+                <span class="iqa-answer-badge">Hindi · क्या → क्यों → कैसे</span>
+              </div>
+              <div class="iqa-answer-content iqa-hi">${formatAnswer(item.hi, "hi")}</div>
+            </section>
           </div>
         </div>
       </details>
@@ -134,6 +145,9 @@
           InterviewVisuals.playItemAnimation(d);
         });
       }
+    }
+    if (typeof InterviewAnswerFormat !== "undefined") {
+      InterviewAnswerFormat.bindScrollChips(listEl);
     }
   }
 
