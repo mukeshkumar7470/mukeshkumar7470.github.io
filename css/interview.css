@@ -384,6 +384,34 @@
   animation: visPulse 2s ease-out infinite;
 }
 
+.vis-star {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.vis-star span {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(110, 231, 183, 0.15);
+  color: var(--accent);
+  animation: visPulse 2.2s ease-in-out infinite;
+}
+
+.vis-star small {
+  width: 100%;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .vis-k-big { font-weight: 700; font-size: 2.5rem; color: var(--accent-3); }
 
 .vis-kotlin-what {

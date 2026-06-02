@@ -71,6 +71,7 @@
     [/context types|launchmode|flavor/i, "android-misc"],
     [/dsa|leetcode|algorithm/i, "dsa-intro"],
     [/architect|scal/i, "arch-scale"],
+    [/tell me about|yourself|strength|weakness|infosys|hire you|behavioral|STAR|conflict|resume/i, "behavioral-star"],
   ];
 
   const DEFAULT_BY_CAT = {
@@ -80,6 +81,7 @@
     android: "default-android",
     dsa: "default-dsa",
     architecture: "default-arch",
+    behavioral: "default-behavioral",
   };
 
   function resolveVisualType(q, categoryId) {
@@ -472,6 +474,15 @@
     "default-android": `<div class="vis-default"><i class="fa-brands fa-android"></i><div class="vis-pulse-ring"></div></div>`,
     "default-dsa": `<div class="vis-default"><i class="fa-solid fa-chart-line"></i><div class="vis-pulse-ring"></div></div>`,
     "default-arch": `<div class="vis-default"><i class="fa-solid fa-sitemap"></i><div class="vis-pulse-ring"></div></div>`,
+    "default-behavioral": `<div class="vis-default"><i class="fa-solid fa-user-tie"></i><div class="vis-pulse-ring"></div></div>`,
+    "behavioral-star": `
+      <div class="vis-star">
+        <span class="vis-star-s">S</span>
+        <span class="vis-star-t">T</span>
+        <span class="vis-star-a">A</span>
+        <span class="vis-star-r">R</span>
+        <small>Situation → Task → Action → Result</small>
+      </div>`,
   };
 
   const LABELS = {
@@ -548,6 +559,8 @@
     "default-android": "Android concept",
     "default-dsa": "DSA pattern",
     "default-arch": "Architecture pattern",
+    "default-behavioral": "Behavioral interview",
+    "behavioral-star": "STAR answer flow",
   };
 
   const TEACHING_OVERRIDES = {
@@ -658,6 +671,13 @@
       mistakes: ["Creating modules without boundaries", "Skipping observability/testing", "Adding abstractions with no purpose"],
       example: "interface OrdersRepository {\n    fun observeOrders(): Flow<List<Order>>\n    suspend fun syncOrders()\n}",
       storyboard: ["Clarify constraints", "Choose boundaries", "Define data flow", "Plan testing/monitoring", "Explain trade-offs"],
+    },
+    behavioral: {
+      diagram: "Hook (10s) -> Proof (40s) -> Fit + Close (20s)\n     |              |                    |\n  Who you are    STAR example      Why this company",
+      analogy: "Behavioral answers are like a movie trailer: enough plot to want the full film, not the entire script.",
+      mistakes: ["Speaking more than 2 minutes on intro", "Bad-mouthing past employer", "No specific example (only buzzwords)", "Saying you have no questions"],
+      example: "Situation: payment bug | Task: fix verify flow | Action: server verify + Room pending state | Result: tickets down",
+      storyboard: ["Listen to question", "Pause 2 seconds", "Structure (STAR or 3 pillars)", "One concrete example", "Stop on time"],
     },
   };
 
@@ -800,6 +820,12 @@
     android: OFFICIAL_REFERENCES["default-android"],
     dsa: OFFICIAL_REFERENCES["default-dsa"],
     architecture: OFFICIAL_REFERENCES["default-arch"],
+    behavioral: {
+      title: "STAR method (interview technique)",
+      figure: "Situation, Task, Action, Result",
+      url: "https://www.themuse.com/advice/star-interview-method",
+      source: "The Muse (STAR overview)",
+    },
   };
 
   function getOfficialReference(type, categoryId) {

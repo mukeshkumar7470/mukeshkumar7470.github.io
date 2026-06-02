@@ -11,7 +11,7 @@ const { normalizeAnswerText, hasExplicitWwh } = require("./wwh-structure");
 const { toReadableHindi } = require("./hindi-readable");
 
 const ROOT = __dirname;
-const SOURCES = ["deep-qa-content.js", "deep-qa-extra.js"];
+const SOURCES = ["deep-qa-content.js", "deep-qa-extra.js", "deep-qa-behavioral.js"];
 const args = new Set(process.argv.slice(2));
 
 function sourcePath(name) {
@@ -27,7 +27,9 @@ function loadSource(name) {
 function writeSource(name, categories) {
   const banner = name.includes("content")
     ? "Java + OOP"
-    : "Kotlin, Android, DSA, Senior Architecture";
+    : name.includes("behavioral")
+      ? "Behavioral & HR (Infosys / mock)"
+      : "Kotlin, Android, DSA, Senior Architecture";
   const header = `/**\n * Deep interview answers — ${banner}.\n * Edit then: node js/build-interview.js\n */\nmodule.exports = `;
   const body = JSON.stringify(categories, null, 2)
     .replace(/"([^"]+)":/g, "$1:")
