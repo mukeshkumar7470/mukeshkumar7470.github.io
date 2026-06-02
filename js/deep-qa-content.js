@@ -1,5 +1,5 @@
 /**
- * Deep interview answers — Java (readable Hindi).
+ * Deep interview answers — Java + OOP.
  * Edit then: node js/build-interview.js
  */
 module.exports = [
@@ -97,6 +97,36 @@ module.exports = [
         q: "Serialization vs Parcelable",
         en: "What?\n\nSerialization and Parcelable are mechanisms used to convert complex objects into a format that can be transmitted across processes (IPC) or saved to disk.\n- Serializable: A standard Java interface that uses reflection under the hood. It is a marker interface (no methods to implement).\n- Parcelable: An Android-specific interface where the developer must manually write the marshalling/unmarshalling code (or use `@Parcelize` in Kotlin).\n\nWhy?\n\nSerializable is extremely slow on Android because it uses Java reflection to inspect the class structure and creates thousands of temporary objects, leading to heavy GC overhead. Parcelable is optimized specifically for Android IPC (Binder) and is up to 10x faster because the serialization logic is explicitly written and compiled.\n\nHow?\n\nIn modern Kotlin, use the `@Parcelize` annotation from the `kotlinx-parcelize` plugin to auto-generate the Parcelable boilerplate at compile-time, giving you both speed and clean code:\n\n```kotlin\n@Parcelize\ndata class User(val id: String, val name: String) : Parcelable\n\n// Passing in Intent\nintent.putExtra(\"user_key\", user)\nval user = intent.getParcelableExtra<User>(\"user_key\")\n```\n\nNever use Parcelable for persistent storage (like saving to disk or database) because its internal binary format can change between Android OS versions, rendering saved data unreadable. Use JSON serialization (like Moshi/Gson) or Room for persistence.",
         hi: "What?\n\nSerialization aur Parcelable complex objects ko ek aise format mein convert karne ke tareeqe hain jisse unhe alag processes (IPC) mein bheja ja sake ya disk par save kiya ja sake.\n- Serializable: Standard Java interface hai jo reflection use karta hai. Yeh ek marker interface hai.\n- Parcelable: Android-specific interface hai jisme marshalling/unmarshalling ka code manually likhna padta hai (ya Kotlin mein `@Parcelize` use karna padta hai).\n\nWhy?\n\nSerializable Android par bahut slow hai kyunki yeh runtime par reflection use karke class structure ko padhta hai aur hazaron temporary objects banata hai, jisse GC par load badhta hai. Parcelable Android IPC (Binder) ke liye optimized hai aur Serializable se 10 guna tak fast hai kyunki iska serialization logic compile-time par hi generate ho jata hai.\n\nHow?\n\nModern Kotlin mein `@Parcelize` annotation ka use karein, jo compile-time par saara boilerplate code khud likh deta hai:\n\n```kotlin\n@Parcelize\ndata class User(val id: String, val name: String) : Parcelable\n// Intent mein pass karna\nintent.putExtra(\"user_key\", user)\nval user = intent.getParcelableExtra<User>(\"user_key\")\n```.\n\nParcelable ko kabhi bhi persistent storage (disk par save karne) ke liye use mat karein, kyunki alag Android OS versions par iska internal binary format change ho sakta hai, jisse data corrupt ho jayega. Disk storage ke liye JSON ya Room use karein."
+      },
+      {
+        q: "Java vs Kotlin — key differences for Android",
+        en: "What?\n\nKotlin: null safety, coroutines, data classes, extension functions, default parameters, sealed types, less boilerplate. Java: verbose, nullable everywhere, mature ecosystem, more legacy Android samples.\n\nWhy?\n\nBoth compile to JVM bytecode on Android. Google recommends Kotlin for new code; Java interop remains for gradual migration.\n\nHow?\n\nCite one benefit you measured: fewer NPE crashes, faster feature delivery, or cleaner networking with coroutines.",
+        hi: "What?\n\nKotlin null safe, concise, coroutines. Java verbose, NPE risk.\n\nWhy?\n\nNaya Android Kotlin prefer.\n\nHow?\n\nProject example do."
+      },
+      {
+        q: "NullPointerException — causes and prevention",
+        en: "What?\n\nNPE occurs when you invoke a method or access a field on a null reference. Common causes: uninitialized fields, API returning null, intent extras missing after process death, chaining calls without null checks.\n\nWhy?\n\nKotlin eliminates many NPEs at compile time with nullable types; Java requires defensive coding, Optional, or annotations.\n\nHow?\n\nPrevention: validate inputs, @Nullable/@NonNull, avoid !! in Kotlin, early return, Crashlytics stack trace to find top NPE sites.",
+        hi: "What?\n\nNull par call se NPE.\n\nWhy?\n\nKotlin compile time help. Java defensive.\n\nHow?\n\n?. ?: check, extras validate."
+      },
+      {
+        q: "Why use final on a Java class",
+        en: "What?\n\nA final class cannot be extended. Used for security (e.g. String), immutability guarantees, and API design when inheritance would break invariants.\n\nWhy?\n\nKotlin: classes are final by default; use `open` to allow subclassing. Java: explicitly mark final to prevent fragile subclasses.\n\nHow?\n\nInterview: String is final — cannot subclass String to break equals/hashCode contract.",
+        hi: "What?\n\nfinal class extend nahi hoti.\n\nWhy?\n\nString final — security.\n\nKotlin default final, open se extend."
+      },
+      {
+        q: "Method overriding vs overloading",
+        en: "What?\n\nOverloading: same method name, different parameter lists, resolved at compile time (static polymorphism). Overriding: subclass provides same signature as parent, resolved at runtime (dynamic polymorphism).\n\nWhy?\n\nAndroid: Activity onCreate(Bundle) override; overload might be showToast(msg) vs showToast(msg, duration).\n\nHow?\n\n@Override in Java; override keyword in Kotlin. Use super.onCreate() when overriding lifecycle methods.",
+        hi: "What?\n\nOverload alag params compile time. Override child same signature runtime.\n\nWhy?\n\nonCreate override example.\n\nHow?\n\n@Override ya override keyword."
+      },
+      {
+        q: "Class initialization vs object instantiation",
+        en: "What?\n\nInstantiation: creating an object with `new` or constructor — memory allocated on heap. Initialization: running constructors, instance init blocks, and setting fields. Class initialization: static blocks run once when class is first loaded.\n\nWhy?\n\nOrder matters: static init → constructor → instance init {} in Kotlin/Java for debugging static NPE and singleton patterns.\n\nHow?\n\nExample: `val user = User(\"a\")` is instantiation; static { } in Java runs on first class reference.",
+        hi: "What?\n\nInstantiation object banana. Initialization constructor/init. Static class load par ek baar.\n\nWhy?\n\nOrder samjho debug ke liye.\n\nHow?\n\nUser() instantiate, static block alag."
+      },
+      {
+        q: "Multiple inheritance in Java — how to achieve",
+        en: "What?\n\nJava does not allow a class to extend multiple classes (no multiple inheritance of implementation). You achieve multiple types via implementing multiple interfaces.\n\nWhy?\n\nDiamond problem avoided. Kotlin same for classes; use interfaces and default interface methods for mixin-style behavior.\n\nHow?\n\n`class Worker implements Payable, Serializable { }` — one class, many interface contracts.",
+        hi: "What?\n\nDo class extend nahi. Multiple interface implement karo.\n\nWhy?\n\nDiamond problem avoid.\n\nHow?\n\nimplements A, B example."
       }
     ]
   },
