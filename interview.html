@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/interview-animations.css">
   <link rel="stylesheet" href="css/interview-answers.css">
+  <link rel="stylesheet" href="css/interview-tts.css">
 </head>
 <body class="interview-page">
   <div class="bg-mesh" aria-hidden="true"></div>
@@ -31,7 +32,7 @@
       <div class="interview-bottom-header reveal visible">
         <span class="section-tag">Interview Prep</span>
         <h1>Java, Kotlin, Android & Architecture Q&A</h1>
-        <p class="section-desc">95 in-depth interview questions — each answer is laid out as <strong>What → Why → How</strong> with color-coded cards, quick-jump chips, code snippets, and <strong>animated visuals</strong> in English and Hindi.</p>
+        <p class="section-desc">95 in-depth interview questions — <strong>What → Why → How</strong> cards, visuals, and <strong>text-to-speech</strong> to listen in English or Hindi while you revise.</p>
       </div>
 
       <div class="interview-toolbar reveal visible">
@@ -45,6 +46,41 @@
         </div>
       </div>
 
+      <p class="interview-tts-warn" id="interviewTtsWarn" hidden>
+        <i class="fa-solid fa-triangle-exclamation"></i> Text-to-speech is not available in this browser. On Windows, install <strong>English (India)</strong> and <strong>Hindi</strong> voices under Settings → Time &amp; language → Speech.
+      </p>
+
+      <div class="interview-tts-toolbar reveal visible" id="interviewTtsToolbar">
+        <span class="interview-tts-toolbar-title">
+          <i class="fa-solid fa-headphones" aria-hidden="true"></i> Text to speech
+        </span>
+        <span class="interview-tts-hint">🇮🇳 <strong>Indian tone</strong> — English uses <em>en-IN</em>, Hindi uses <em>hi-IN</em>. Another topic stops current speech.</span>
+        <div class="interview-tts-controls">
+          <div class="interview-tts-rate-wrap">
+            <label for="interviewTtsVoiceEn">English voice</label>
+            <select id="interviewTtsVoiceEn" class="interview-tts-voice" aria-label="Indian English voice">
+              <option value="auto">Auto — Indian English</option>
+            </select>
+          </div>
+          <div class="interview-tts-rate-wrap">
+            <label for="interviewTtsVoiceHi">Hindi voice</label>
+            <select id="interviewTtsVoiceHi" class="interview-tts-voice" aria-label="Hindi India voice">
+              <option value="auto">Auto — Hindi (India)</option>
+            </select>
+          </div>
+          <div class="interview-tts-rate-wrap">
+            <label for="interviewTtsRate">Speed</label>
+            <select id="interviewTtsRate" class="interview-tts-rate" aria-label="Speech speed">
+              <option value="0.85">0.85×</option>
+              <option value="0.95" selected>0.95×</option>
+              <option value="1">1×</option>
+              <option value="1.1">1.1×</option>
+            </select>
+          </div>
+        </div>
+        <p class="interview-tts-voice-hint" id="interviewTtsVoiceHint" aria-live="polite"></p>
+      </div>
+
       <div class="interview-tabs-wrap reveal visible">
         <div class="interview-tabs" id="interviewTabs" role="tablist" aria-label="Question categories"></div>
         <p class="interview-count" id="interviewCount" aria-live="polite"></p>
@@ -55,7 +91,7 @@
           <i class="fa-solid fa-lightbulb"></i>
           <div>
             <strong>How to read</strong>
-            <p>Each answer uses <strong>What</strong> (concept), <strong>Why</strong> (reason), and <strong>How</strong> (practice). Tap the chips to jump. Expand for the visual animation first.</p>
+            <p>Use <strong>Listen</strong> — words highlight in the <strong>question and answers</strong> as they play.</p>
           </div>
         </div>
         <div class="prep-card">
@@ -71,6 +107,13 @@
     </div>
   </main>
 
+  <div class="interview-tts-bar" id="interviewTtsBar" hidden>
+    <span><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Speaking…</span>
+    <button type="button" class="btn btn-outline btn-sm" id="interviewTtsStop">
+      <i class="fa-solid fa-stop"></i> Stop
+    </button>
+  </div>
+
   <footer class="footer">
     <div class="container footer-inner">
       <p><a href="index.html">← Portfolio</a> · &copy; <span id="year"></span> Mukesh Kumar Patel</p>
@@ -83,6 +126,7 @@
   <script src="js/interview-data.js"></script>
   <script src="js/interview-visuals.js"></script>
   <script src="js/interview-answer-format.js"></script>
+  <script src="js/interview-tts.js"></script>
   <script src="js/interview.js"></script>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();

@@ -6,7 +6,7 @@ Modern single-page portfolio for a Mobile App Developer (Android & Flutter), hos
 
 ## Features
 
-- **Interview Prep** — separate page (`interview.html`) with 95 deep Q&A in **What / Why / How** cards (EN + HI); edit `js/deep-qa-content.js` / `js/deep-qa-extra.js` then run `node js/generate-interview-data.js`
+- **Interview Prep** — separate page (`interview.html`) with 95 deep Q&A in **What / Why / How** cards (EN + HI) and **text-to-speech** listen buttons; edit `js/deep-qa-content.js` / `js/deep-qa-extra.js` then run `node js/generate-interview-data.js`
 
 ## Stack
 

@@ -64,31 +64,62 @@
     return "";
   }
 
+  function ttsBtn(mode, label, icon) {
+    if (typeof InterviewTTS !== "undefined") {
+      return InterviewTTS.ttsButton(mode, label, icon);
+    }
+    return "";
+  }
+
   function renderAccordion(item) {
     const openAttr = expandAll ? " open" : "";
     const visual = renderVisualBlock(item);
+    const ttsSupported = typeof InterviewTTS !== "undefined" && InterviewTTS.supported();
+    const ttsBlock = ttsSupported
+      ? `
+          <div class="iqa-tts-row" role="group" aria-label="Listen to this question">
+            <span class="iqa-tts-row-label"><i class="fa-solid fa-headphones"></i> Listen</span>
+            ${ttsBtn("question", "Question", "fa-solid fa-circle-question")}
+            ${ttsBtn("en", "English", "fa-solid fa-volume-high")}
+            ${ttsBtn("hi", "Hindi", "fa-solid fa-language")}
+            ${ttsBtn("all", "All", "fa-solid fa-play")}
+          </div>`
+      : "";
+
     return `
       <details class="iqa-item" data-category="${item.categoryId}" data-id="${item.globalId}"${openAttr}>
         <summary class="iqa-summary">
           <span class="iqa-num">${item.num}</span>
           <span class="iqa-title">${escapeHtml(item.q)}</span>
           <span class="iqa-cat-badge">${escapeHtml(item.categoryLabel)}</span>
+          ${
+            ttsSupported
+              ? `<span class="iqa-summary-tts">${ttsBtn("question", "Listen question", "fa-solid fa-volume-high")}</span>`
+              : ""
+          }
           <i class="fa-solid fa-chevron-down iqa-chevron" aria-hidden="true"></i>
         </summary>
         <div class="iqa-body">
           ${visual}
+          ${ttsBlock}
           <div class="iqa-body-layout">
             <section class="iqa-answer-panel">
               <div class="iqa-answer-head iqa-en">
                 <h4><i class="fa-solid fa-microphone"></i> Interview answer</h4>
-                <span class="iqa-answer-badge">English · What → Why → How</span>
+                <div class="iqa-answer-head-actions">
+                  ${ttsSupported ? ttsBtn("en", "Listen English", "fa-solid fa-volume-high") : ""}
+                  <span class="iqa-answer-badge">English · What → Why → How</span>
+                </div>
               </div>
               <div class="iqa-answer-content iqa-en">${formatAnswer(item.en, "en")}</div>
             </section>
             <section class="iqa-answer-panel">
               <div class="iqa-answer-head iqa-hi">
                 <h4><i class="fa-solid fa-book-open"></i> Deep explanation</h4>
-                <span class="iqa-answer-badge">Hindi · क्या → क्यों → कैसे</span>
+                <div class="iqa-answer-head-actions">
+                  ${ttsSupported ? ttsBtn("hi", "Listen Hindi", "fa-solid fa-language") : ""}
+                  <span class="iqa-answer-badge">Hindi · क्या → क्यों → कैसे</span>
+                </div>
               </div>
               <div class="iqa-answer-content iqa-hi">${formatAnswer(item.hi, "hi")}</div>
             </section>
@@ -99,6 +130,10 @@
   }
 
   function renderGrouped(categories, query) {
+    if (typeof InterviewTTS !== "undefined" && InterviewTTS.isPlaying()) {
+      InterviewTTS.stop();
+    }
+
     let total = 0;
     let html = "";
 
@@ -149,6 +184,9 @@
     if (typeof InterviewAnswerFormat !== "undefined") {
       InterviewAnswerFormat.bindScrollChips(listEl);
     }
+    if (typeof InterviewTTS !== "undefined") {
+      InterviewTTS.bindList(listEl);
+    }
   }
 
   function render() {
@@ -191,6 +229,7 @@
 
   if (expandAllBtn) {
     expandAllBtn.addEventListener("click", () => {
+      if (typeof InterviewTTS !== "undefined") InterviewTTS.stop();
       expandAll = true;
       render();
     });
@@ -198,9 +237,14 @@
 
   if (collapseAllBtn) {
     collapseAllBtn.addEventListener("click", () => {
+      if (typeof InterviewTTS !== "undefined") InterviewTTS.stop();
       expandAll = false;
       render();
     });
+  }
+
+  if (typeof InterviewTTS !== "undefined") {
+    InterviewTTS.bindToolbar();
   }
 
   buildTabs();
