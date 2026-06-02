@@ -102,6 +102,28 @@
   margin: 0 0 1rem;
 }
 
+.interview-mobile-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #a5f3fc;
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  background: rgba(110, 231, 183, 0.08);
+}
+
+.interview-mobile-hint[hidden] {
+  display: none !important;
+}
+
+.interview-mobile-hint code {
+  font-size: 0.72rem;
+}
+
 /* Fixed background music-style player */
 .interview-player {
   position: fixed;

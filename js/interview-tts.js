@@ -48,11 +48,27 @@
   let backgroundBound = false;
   let lastSpokeAt = 0;
 
+  function isMobile() {
+    return (
+      typeof InterviewMusicAudio !== "undefined" &&
+      InterviewMusicAudio.isMobileDevice()
+    );
+  }
+
   function useMusicAudio() {
     return (
       typeof InterviewMusicAudio !== "undefined" &&
       InterviewMusicAudio.shouldUseMusicAudio()
     );
+  }
+
+  async function ensureMobileKeepalive() {
+    if (!isMobile()) return;
+    if (InterviewMusicAudio.startKeepaliveLoop) {
+      await InterviewMusicAudio.startKeepaliveLoop();
+      return;
+    }
+    await startKeepaliveAudio();
   }
 
   function supported() {
@@ -79,7 +95,8 @@
   }
 
   function hardCancelSpeech() {
-    if (useMusicAudio()) InterviewMusicAudio.stop();
+    if (useMusicAudio() && InterviewMusicAudio.stopChunk) InterviewMusicAudio.stopChunk();
+    else if (useMusicAudio()) InterviewMusicAudio.stop();
     if (!("speechSynthesis" in window)) return;
     const syn = synth();
     syn.cancel();
@@ -92,7 +109,8 @@
   /** Wait until browser speech queue is clear (Chrome fix after cancel) */
   function waitSynthIdle() {
     if (useMusicAudio()) {
-      InterviewMusicAudio.stop();
+      if (InterviewMusicAudio.stopChunk) InterviewMusicAudio.stopChunk();
+      else InterviewMusicAudio.stop();
       return new Promise((resolve) => setTimeout(resolve, IDLE_WAIT_MS));
     }
     return new Promise((resolve) => {
@@ -418,7 +436,8 @@
   }
 
   async function startBackgroundSession() {
-    if (!useMusicAudio()) await startKeepaliveAudio();
+    if (isMobile()) await ensureMobileKeepalive();
+    else if (!useMusicAudio()) await startKeepaliveAudio();
     await requestWakeLock();
     startVoiceKeepalive();
     startStallWatch();
@@ -428,6 +447,7 @@
   }
 
   function stopBackgroundSession() {
+    if (InterviewMusicAudio?.stopKeepaliveLoop) InterviewMusicAudio.stopKeepaliveLoop();
     stopKeepaliveAudio();
     releaseWakeLock();
     stopVoiceKeepalive();
@@ -437,6 +457,7 @@
   function handleVisibilityChange() {
     if (!player.active) return;
     if (document.visibilityState === "hidden") {
+      ensureMobileKeepalive();
       startKeepaliveAudio();
       if ("mediaSession" in navigator) {
         navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
@@ -444,6 +465,7 @@
       return;
     }
     requestWakeLock();
+    ensureMobileKeepalive();
     startKeepaliveAudio();
     if (player.paused) return;
     const syn = synth();
@@ -461,7 +483,10 @@
     backgroundBound = true;
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", () => {
-      if (player.active) startKeepaliveAudio();
+      if (player.active) {
+        ensureMobileKeepalive();
+        startKeepaliveAudio();
+      }
     });
     window.addEventListener("pageshow", () => {
       if (player.active && !player.paused) recoverStalledPlayback();
@@ -906,6 +931,7 @@
         setTimeout(trySpeak, 200);
         return;
       }
+      ensureMobileKeepalive();
       startKeepaliveAudio();
       if ("mediaSession" in navigator) {
         navigator.mediaSession.playbackState = "playing";
@@ -954,11 +980,20 @@
       const spokenText = stripForSpeech(rootEl.innerText) || part.text;
       part.text = spokenText;
       prepareInlineHighlight(itemEl, part.target);
-      const maxChunk = useMusicAudio() ? InterviewMusicAudio.maxChunkLen : 280;
+      const maxChunk =
+        useMusicAudio() && InterviewMusicAudio.maxChunkLen
+          ? InterviewMusicAudio.maxChunkLen
+          : 280;
       const chunks = chunkText(spokenText, maxChunk);
-      let ok = await speakChunks(chunks, part.lang, session, rootEl, part, false);
-      if (!ok && useMusicAudio() && "speechSynthesis" in window) {
+      let ok = false;
+      if (useMusicAudio()) {
+        ok = await speakChunks(chunks, part.lang, session, rootEl, part, false);
+      } else if ("speechSynthesis" in window) {
+        ok = await speakChunks(chunks, part.lang, session, rootEl, part, false);
+      }
+      if (!ok && isMobile() && "speechSynthesis" in window) {
         await waitSynthIdle();
+        await ensureMobileKeepalive();
         ok = await speakChunks(
           chunkText(spokenText, 280),
           part.lang,
@@ -1078,8 +1113,11 @@
     player.paused = false;
     player.active = true;
 
+    if (InterviewMusicAudio?.resetStreamFailed) InterviewMusicAudio.resetStreamFailed();
+
     if (itemEl && !itemEl.open) itemEl.open = true;
 
+    if (isMobile()) ensureMobileKeepalive();
     startBackgroundSession();
     playCurrentTrack();
   }
@@ -1119,9 +1157,11 @@
     const enRanked = voicesForLang("en");
     const hiRanked = voicesForLang("hi");
     if (hint) {
-      if (useMusicAudio()) {
-        hint.textContent =
-          "Mobile music mode: plays in background with lock-screen controls (like JioSaavn). Use bottom player or notification.";
+      if (isMobile()) {
+        const proxy = InterviewMusicAudio.proxyBase?.();
+        hint.textContent = proxy
+          ? "Mobile: streaming audio in background (lock-screen controls). Proxy: connected."
+          : "Mobile: background listen enabled. For best results on phone, deploy the free TTS proxy (see cloudflare-worker folder) and set window.INTERVIEW_TTS_PROXY.";
       } else {
         const enName = enRanked[0]?.name || "none detected";
         const hiName = hiRanked[0]?.name || "none detected";
@@ -1176,6 +1216,21 @@
     bindPlayerControls();
     bindMediaSession();
     bindBackgroundPlayback();
+    updateMobileHint();
+  }
+
+  function updateMobileHint() {
+    const box = document.getElementById("interviewMobileHint");
+    const text = document.getElementById("interviewMobileHintText");
+    if (!box || !text || !isMobile()) return;
+    const proxy = InterviewMusicAudio?.proxyBase?.();
+    if (proxy) {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    text.textContent =
+      "Background audio on phone needs the free TTS proxy (5 min setup). See cloudflare-worker/README.md — then set window.INTERVIEW_TTS_PROXY in interview.html.";
   }
 
   function bindPlayerControls() {

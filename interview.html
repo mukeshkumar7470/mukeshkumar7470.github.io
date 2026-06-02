@@ -50,6 +50,11 @@
         </div>
       </div>
 
+      <p class="interview-mobile-hint" id="interviewMobileHint" hidden>
+        <i class="fa-solid fa-mobile-screen"></i>
+        <span id="interviewMobileHintText"></span>
+      </p>
+
       <p class="interview-tts-warn" id="interviewTtsWarn" hidden>
         <i class="fa-solid fa-triangle-exclamation"></i> Text-to-speech is not available in this browser. On Windows, install <strong>English (India)</strong> and <strong>Hindi</strong> voices under Settings → Time &amp; language → Speech.
       </p>
@@ -95,7 +100,7 @@
           <i class="fa-solid fa-lightbulb"></i>
           <div>
             <strong>How to read</strong>
-            <p>On phone: tap <strong>Listen</strong> — plays like <strong>JioSaavn</strong> in background with lock-screen play/pause/next. Add to Home Screen for best results.</p>
+            <p>On phone: tap <strong>Listen</strong>, then lock the screen. For reliable background audio, deploy the free <strong>TTS proxy</strong> (<code>cloudflare-worker/README.md</code>) and set <code>INTERVIEW_TTS_PROXY</code> in <code>interview.html</code>.</p>
           </div>
         </div>
         <div class="prep-card">
@@ -167,6 +172,10 @@
     </div>
   </footer>
 
+  <!-- Optional: deploy cloudflare-worker/tts-proxy.js then set your Workers URL here -->
+  <script>
+    window.INTERVIEW_TTS_PROXY = "";
+  </script>
   <script src="js/interview-data.js"></script>
   <script src="js/interview-visuals.js"></script>
   <script src="js/interview-answer-format.js"></script>
