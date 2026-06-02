@@ -1,0 +1,17 @@
+{
+  "name": "Interview Prep — Mukesh Kumar Patel",
+  "short_name": "Interview Prep",
+  "description": "Java, Kotlin, Android interview Q&A with background listen mode",
+  "start_url": "interview.html",
+  "display": "standalone",
+  "background_color": "#0a0b10",
+  "theme_color": "#6ee7b7",
+  "icons": [
+    {
+      "src": "https://avatars.githubusercontent.com/u/48297190?v=4",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

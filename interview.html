@@ -8,6 +8,8 @@
   <title>Interview Prep — Mukesh Kumar Patel</title>
   <meta name="description" content="95 Java, Kotlin, Android, DSA and Senior Architecture interview Q&A with English answers and Hindi explanations.">
   <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6ee7b7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -56,7 +58,7 @@
         <span class="interview-tts-toolbar-title">
           <i class="fa-solid fa-headphones" aria-hidden="true"></i> Text to speech
         </span>
-        <span class="interview-tts-hint">🇮🇳 Indian tone · <strong>Background player</strong> at bottom — keeps playing on mobile when you switch apps or lock the screen (use lock-screen controls).</span>
+        <span class="interview-tts-hint">📱 On mobile: <strong>music-style playback</strong> (like JioSaavn) — lock screen &amp; notification controls. Desktop uses Indian voice TTS.</span>
         <div class="interview-tts-controls">
           <div class="interview-tts-rate-wrap">
             <label for="interviewTtsVoiceEn">English voice</label>
@@ -93,7 +95,7 @@
           <i class="fa-solid fa-lightbulb"></i>
           <div>
             <strong>How to read</strong>
-            <p>Tap <strong>Listen</strong> or <strong>All</strong> — playback continues when you switch apps or lock the phone. Use lock-screen / notification controls like a music player.</p>
+            <p>On phone: tap <strong>Listen</strong> — plays like <strong>JioSaavn</strong> in background with lock-screen play/pause/next. Add to Home Screen for best results.</p>
           </div>
         </div>
         <div class="prep-card">
@@ -109,7 +111,16 @@
     </div>
   </main>
 
-  <!-- Silent loop keeps mobile browsers in "media playing" mode for background TTS -->
+  <!-- Mobile: real audio stream for background + lock screen (JioSaavn-style) -->
+  <audio
+    id="interviewPlayerMusic"
+    playsinline
+    webkit-playsinline
+    preload="auto"
+    hidden
+    aria-hidden="true"
+  ></audio>
+  <!-- Desktop fallback: silent loop while Web Speech runs -->
   <audio
     id="interviewPlayerKeepalive"
     loop
@@ -159,6 +170,7 @@
   <script src="js/interview-data.js"></script>
   <script src="js/interview-visuals.js"></script>
   <script src="js/interview-answer-format.js"></script>
+  <script src="js/interview-music-audio.js"></script>
   <script src="js/interview-tts.js"></script>
   <script src="js/interview.js"></script>
   <script>

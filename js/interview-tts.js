@@ -48,8 +48,17 @@
   let backgroundBound = false;
   let lastSpokeAt = 0;
 
+  function useMusicAudio() {
+    return (
+      typeof InterviewMusicAudio !== "undefined" &&
+      InterviewMusicAudio.shouldUseMusicAudio()
+    );
+  }
+
   function supported() {
-    return typeof window !== "undefined" && "speechSynthesis" in window;
+    if (typeof window === "undefined") return false;
+    if (useMusicAudio()) return true;
+    return "speechSynthesis" in window;
   }
 
   function synth() {
@@ -70,6 +79,8 @@
   }
 
   function hardCancelSpeech() {
+    if (useMusicAudio()) InterviewMusicAudio.stop();
+    if (!("speechSynthesis" in window)) return;
     const syn = synth();
     syn.cancel();
     if (syn.speaking || syn.pending) {
@@ -80,6 +91,10 @@
 
   /** Wait until browser speech queue is clear (Chrome fix after cancel) */
   function waitSynthIdle() {
+    if (useMusicAudio()) {
+      InterviewMusicAudio.stop();
+      return new Promise((resolve) => setTimeout(resolve, IDLE_WAIT_MS));
+    }
     return new Promise((resolve) => {
       hardCancelSpeech();
       let tries = 0;
@@ -391,6 +406,7 @@
 
   function recoverStalledPlayback() {
     if (!player.active || player.paused) return;
+    if (useMusicAudio() && InterviewMusicAudio.isPlaying()) return;
     const syn = synth();
     if (syn.speaking || syn.pending || trackInProgress) return;
     startKeepaliveAudio();
@@ -402,7 +418,7 @@
   }
 
   async function startBackgroundSession() {
-    await startKeepaliveAudio();
+    if (!useMusicAudio()) await startKeepaliveAudio();
     await requestWakeLock();
     startVoiceKeepalive();
     startStallWatch();
@@ -499,11 +515,15 @@
 
   function setMediaSession(track) {
     if (!("mediaSession" in navigator) || !track) return;
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: track.questionText,
-      artist: `Interview Prep · ${track.label}`,
-      album: "Mukesh Kumar Patel",
-    });
+    if (useMusicAudio() && InterviewMusicAudio.setMediaArtwork) {
+      InterviewMusicAudio.setMediaArtwork(track);
+    } else {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.questionText,
+        artist: `Interview Prep · ${track.label}`,
+        album: "Mukesh Kumar Patel",
+      });
+    }
     navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
   }
 
@@ -545,8 +565,16 @@
   }
 
   function pausePlayback() {
-    const syn = synth();
     if (!player.active) return;
+    if (useMusicAudio() && InterviewMusicAudio.isPlaying()) {
+      InterviewMusicAudio.pause();
+      player.paused = true;
+      clearFallbackTimer();
+      updatePlayPauseIcon(true, true);
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+      return;
+    }
+    const syn = synth();
     if (syn.speaking && !syn.paused) {
       syn.pause();
       player.paused = true;
@@ -561,9 +589,17 @@
   }
 
   function resumePlayback() {
-    const syn = synth();
     if (!player.active) return;
     player.paused = false;
+    if (useMusicAudio()) {
+      InterviewMusicAudio.resume().then((ok) => {
+        if (!ok) playCurrentTrack();
+      });
+      updatePlayPauseIcon(true, false);
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+      return;
+    }
+    const syn = synth();
     startKeepaliveAudio();
     if (syn.paused) {
       syn.resume();
@@ -577,6 +613,11 @@
   }
 
   function togglePlayPause() {
+    if (useMusicAudio()) {
+      if (player.paused || !InterviewMusicAudio.isPlaying()) resumePlayback();
+      else pausePlayback();
+      return;
+    }
     const syn = synth();
     if (player.paused || syn.paused) resumePlayback();
     else if (syn.speaking || syn.pending || activeBtn) pausePlayback();
@@ -757,11 +798,28 @@
   }
 
   function isPlaying() {
+    if (useMusicAudio() && InterviewMusicAudio.isPlaying()) return true;
     const syn = synth();
     return !!(player.active || activeBtn || syn.speaking || syn.pending);
   }
 
-  function speakOneChunk(text, lang, session, rootEl, chunkOffset, fullPartText) {
+  async function speakOneChunkMusic(text, lang, session, rootEl, chunkOffset, fullPartText) {
+    const ok = await InterviewMusicAudio.playChunk(text, lang, {
+      isSessionActive: () => isSessionActive(session),
+      isPaused: () => player.paused,
+      getRate: getRate,
+      onStart: () => {
+        lastSpokeAt = Date.now();
+        if (!isSessionActive(session) || highlightRoot !== rootEl) return;
+        setLiveHighlight(rootEl, chunkOffset);
+        startFallbackHighlight(rootEl, fullPartText || text, session, chunkOffset);
+      },
+    });
+    lastSpokeAt = Date.now();
+    return ok && isSessionActive(session);
+  }
+
+  function speakOneChunkSpeech(text, lang, session, rootEl, chunkOffset, fullPartText) {
     return new Promise((resolve) => {
       if (!isSessionActive(session) || !text) {
         resolve(false);
@@ -823,6 +881,13 @@
     });
   }
 
+  function speakOneChunk(text, lang, session, rootEl, chunkOffset, fullPartText, forceSpeech) {
+    if (useMusicAudio() && !forceSpeech) {
+      return speakOneChunkMusic(text, lang, session, rootEl, chunkOffset, fullPartText);
+    }
+    return speakOneChunkSpeech(text, lang, session, rootEl, chunkOffset, fullPartText);
+  }
+
   function chunkStartOffsets(fullText, chunks) {
     const offsets = [];
     let searchFrom = 0;
@@ -850,7 +915,7 @@
     trySpeak();
   }
 
-  async function speakChunks(chunks, lang, session, rootEl, part) {
+  async function speakChunks(chunks, lang, session, rootEl, part, forceSpeech) {
     const offsets = chunkStartOffsets(part.text, chunks);
 
     for (let i = 0; i < chunks.length; i += 1) {
@@ -863,7 +928,8 @@
         session,
         rootEl,
         offsets[i] || 0,
-        part.text
+        part.text,
+        forceSpeech
       );
       if (!ok || !isSessionActive(session)) return false;
       if (i < chunks.length - 1) {
@@ -888,8 +954,20 @@
       const spokenText = stripForSpeech(rootEl.innerText) || part.text;
       part.text = spokenText;
       prepareInlineHighlight(itemEl, part.target);
-      const chunks = chunkText(spokenText, 280);
-      const ok = await speakChunks(chunks, part.lang, session, rootEl, part);
+      const maxChunk = useMusicAudio() ? InterviewMusicAudio.maxChunkLen : 280;
+      const chunks = chunkText(spokenText, maxChunk);
+      let ok = await speakChunks(chunks, part.lang, session, rootEl, part, false);
+      if (!ok && useMusicAudio() && "speechSynthesis" in window) {
+        await waitSynthIdle();
+        ok = await speakChunks(
+          chunkText(spokenText, 280),
+          part.lang,
+          session,
+          rootEl,
+          part,
+          true
+        );
+      }
       if (!ok || !isSessionActive(session)) return;
 
       markLiveComplete(rootEl);
@@ -1041,9 +1119,14 @@
     const enRanked = voicesForLang("en");
     const hiRanked = voicesForLang("hi");
     if (hint) {
-      const enName = enRanked[0]?.name || "none detected";
-      const hiName = hiRanked[0]?.name || "none detected";
-      hint.textContent = `Indian tone: ${enName} · ${hiName}`;
+      if (useMusicAudio()) {
+        hint.textContent =
+          "Mobile music mode: plays in background with lock-screen controls (like JioSaavn). Use bottom player or notification.";
+      } else {
+        const enName = enRanked[0]?.name || "none detected";
+        const hiName = hiRanked[0]?.name || "none detected";
+        hint.textContent = `Indian tone: ${enName} · ${hiName}`;
+      }
     }
   }
 
