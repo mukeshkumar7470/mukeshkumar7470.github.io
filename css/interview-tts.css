@@ -109,6 +109,7 @@
   right: 0;
   bottom: 0;
   z-index: 300;
+  padding-bottom: env(safe-area-inset-bottom, 0);
   border-top: 1px solid rgba(110, 231, 183, 0.3);
   background: rgba(10, 11, 16, 0.96);
   backdrop-filter: blur(16px);

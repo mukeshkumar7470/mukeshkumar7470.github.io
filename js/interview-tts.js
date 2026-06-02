@@ -36,6 +36,18 @@
     active: false,
   };
 
+  /** Minimal silent MP3 — keeps iOS/Android audio session alive in background */
+  const SILENT_MP3 =
+    "data:audio/mp3;base64,//uQxAAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+
+  let keepaliveAudio = null;
+  let wakeLock = null;
+  let voiceKeepaliveTimer = null;
+  let stallWatchTimer = null;
+  let trackInProgress = false;
+  let backgroundBound = false;
+  let lastSpokeAt = 0;
+
   function supported() {
     return typeof window !== "undefined" && "speechSynthesis" in window;
   }
@@ -287,11 +299,165 @@
     return { tracks, startIndex };
   }
 
+  function getKeepaliveAudio() {
+    if (keepaliveAudio) return keepaliveAudio;
+    keepaliveAudio = document.getElementById("interviewPlayerKeepalive");
+    if (!keepaliveAudio) return null;
+    if (!keepaliveAudio.src) keepaliveAudio.src = SILENT_MP3;
+    keepaliveAudio.volume = 0.02;
+    keepaliveAudio.setAttribute("playsinline", "");
+    keepaliveAudio.setAttribute("webkit-playsinline", "");
+    return keepaliveAudio;
+  }
+
+  async function startKeepaliveAudio() {
+    const audio = getKeepaliveAudio();
+    if (!audio) return;
+    try {
+      if (audio.paused) await audio.play();
+    } catch (_) {
+      /* Needs user gesture — same tap that started Listen also unlocks this */
+    }
+  }
+
+  function stopKeepaliveAudio() {
+    const audio = getKeepaliveAudio();
+    if (!audio) return;
+    audio.pause();
+    try {
+      audio.currentTime = 0;
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  async function requestWakeLock() {
+    if (!("wakeLock" in navigator)) return;
+    try {
+      if (wakeLock) return;
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => {
+        wakeLock = null;
+      });
+    } catch (_) {
+      wakeLock = null;
+    }
+  }
+
+  async function releaseWakeLock() {
+    if (!wakeLock) return;
+    try {
+      await wakeLock.release();
+    } catch (_) {
+      /* ignore */
+    }
+    wakeLock = null;
+  }
+
+  function startVoiceKeepalive() {
+    stopVoiceKeepalive();
+    voiceKeepaliveTimer = setInterval(() => {
+      if (!player.active || player.paused) return;
+      refreshVoices();
+      synth().getVoices();
+    }, 8000);
+  }
+
+  function stopVoiceKeepalive() {
+    if (voiceKeepaliveTimer) {
+      clearInterval(voiceKeepaliveTimer);
+      voiceKeepaliveTimer = null;
+    }
+  }
+
+  function startStallWatch() {
+    stopStallWatch();
+    stallWatchTimer = setInterval(() => {
+      if (!player.active || player.paused || trackInProgress) return;
+      if (Date.now() - lastSpokeAt < 4500) return;
+      const syn = synth();
+      if (!syn.speaking && !syn.pending) {
+        recoverStalledPlayback();
+      }
+    }, 3200);
+  }
+
+  function stopStallWatch() {
+    if (stallWatchTimer) {
+      clearInterval(stallWatchTimer);
+      stallWatchTimer = null;
+    }
+  }
+
+  function recoverStalledPlayback() {
+    if (!player.active || player.paused) return;
+    const syn = synth();
+    if (syn.speaking || syn.pending || trackInProgress) return;
+    startKeepaliveAudio();
+    if (syn.paused) {
+      resumePlayback();
+      return;
+    }
+    playCurrentTrack();
+  }
+
+  async function startBackgroundSession() {
+    await startKeepaliveAudio();
+    await requestWakeLock();
+    startVoiceKeepalive();
+    startStallWatch();
+    if ("mediaSession" in navigator && player.active) {
+      navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
+    }
+  }
+
+  function stopBackgroundSession() {
+    stopKeepaliveAudio();
+    releaseWakeLock();
+    stopVoiceKeepalive();
+    stopStallWatch();
+  }
+
+  function handleVisibilityChange() {
+    if (!player.active) return;
+    if (document.visibilityState === "hidden") {
+      startKeepaliveAudio();
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
+      }
+      return;
+    }
+    requestWakeLock();
+    startKeepaliveAudio();
+    if (player.paused) return;
+    const syn = synth();
+    if (syn.paused) {
+      resumePlayback();
+      return;
+    }
+    if (!syn.speaking && !syn.pending && !trackInProgress) {
+      recoverStalledPlayback();
+    }
+  }
+
+  function bindBackgroundPlayback() {
+    if (backgroundBound) return;
+    backgroundBound = true;
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", () => {
+      if (player.active) startKeepaliveAudio();
+    });
+    window.addEventListener("pageshow", () => {
+      if (player.active && !player.paused) recoverStalledPlayback();
+    });
+  }
+
   function showPlayerBar() {
     const el = document.getElementById("interviewPlayer");
     if (el) el.hidden = false;
     document.body.classList.add("player-active");
     player.active = true;
+    startBackgroundSession();
   }
 
   function hidePlayerBar() {
@@ -301,6 +467,7 @@
     player.active = false;
     updatePlayPauseIcon(false, false);
     clearMediaSession();
+    stopBackgroundSession();
   }
 
   function updatePlayPauseIcon(playing, paused) {
@@ -386,15 +553,20 @@
       clearFallbackTimer();
       updatePlayPauseIcon(true, true);
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+    } else if (!syn.speaking && !syn.pending) {
+      player.paused = true;
+      updatePlayPauseIcon(true, true);
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
     }
   }
 
   function resumePlayback() {
     const syn = synth();
     if (!player.active) return;
+    player.paused = false;
+    startKeepaliveAudio();
     if (syn.paused) {
       syn.resume();
-      player.paused = false;
       updatePlayPauseIcon(true, false);
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
       return;
@@ -625,6 +797,7 @@
       };
 
       u.onstart = () => {
+        lastSpokeAt = Date.now();
         if (!isSessionActive(session) || highlightRoot !== rootEl) return;
         setLiveHighlight(rootEl, chunkOffset);
         setTimeout(() => {
@@ -634,7 +807,10 @@
         }, 450);
       };
 
-      u.onend = () => finish(true);
+      u.onend = () => {
+        lastSpokeAt = Date.now();
+        finish(true);
+      };
       u.onerror = () => finish(false);
 
       speakWhenReady(u, session);
@@ -664,6 +840,10 @@
       if (player.paused) {
         setTimeout(trySpeak, 200);
         return;
+      }
+      startKeepaliveAudio();
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = "playing";
       }
       synth().speak(utterance);
     };
@@ -696,31 +876,36 @@
   async function runSingleTrack(track, itemEl, session, btn) {
     if (!isSessionActive(session) || !track) return;
 
-    const part = track.part;
-    const rootEl = getHighlightTarget(itemEl, part.target);
-    if (!rootEl) return;
+    trackInProgress = true;
+    try {
+      const part = track.part;
+      const rootEl = getHighlightTarget(itemEl, part.target);
+      if (!rootEl) return;
 
-    setActiveUi(btn, itemEl);
-    updatePlayerUI(track);
+      setActiveUi(btn, itemEl);
+      updatePlayerUI(track);
 
-    const spokenText = stripForSpeech(rootEl.innerText) || part.text;
-    part.text = spokenText;
-    prepareInlineHighlight(itemEl, part.target);
-    const chunks = chunkText(spokenText, 280);
-    const ok = await speakChunks(chunks, part.lang, session, rootEl, part);
-    if (!ok || !isSessionActive(session)) return;
+      const spokenText = stripForSpeech(rootEl.innerText) || part.text;
+      part.text = spokenText;
+      prepareInlineHighlight(itemEl, part.target);
+      const chunks = chunkText(spokenText, 280);
+      const ok = await speakChunks(chunks, part.lang, session, rootEl, part);
+      if (!ok || !isSessionActive(session)) return;
 
-    markLiveComplete(rootEl);
-    finishTrack(session);
+      markLiveComplete(rootEl);
+      finishTrack(session);
 
-    if (!player.active || player.paused) return;
+      if (!player.active || player.paused) return;
 
-    if (player.index < player.tracks.length - 1) {
-      player.index += 1;
-      await waitSynthIdle();
-      if (player.active) playCurrentTrack();
-    } else {
-      stopPlayer();
+      if (player.index < player.tracks.length - 1) {
+        player.index += 1;
+        await waitSynthIdle();
+        if (player.active) playCurrentTrack();
+      } else {
+        stopPlayer();
+      }
+    } finally {
+      trackInProgress = false;
     }
   }
 
@@ -736,6 +921,7 @@
       return;
     }
 
+    lastSpokeAt = Date.now();
     const itemEl = queryItemEl(track.globalId);
     if (itemEl) itemEl.open = true;
 
@@ -755,6 +941,7 @@
         return runSingleTrack(track, itemEl, session, btn || null);
       })
       .catch(() => {
+        trackInProgress = false;
         if (player.active) stopPlayer();
       });
   }
@@ -815,6 +1002,7 @@
 
     if (itemEl && !itemEl.open) itemEl.open = true;
 
+    startBackgroundSession();
     playCurrentTrack();
   }
 
@@ -904,6 +1092,7 @@
     populateVoiceDropdowns();
     bindPlayerControls();
     bindMediaSession();
+    bindBackgroundPlayback();
   }
 
   function bindPlayerControls() {
