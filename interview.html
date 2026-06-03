@@ -92,6 +92,56 @@
         <p class="interview-count" id="interviewCount" aria-live="polite"></p>
       </div>
 
+      <!-- ═══════════════════════════════════════════════════
+           STUDY PLAN FLOWCHART + DECISION TREE
+           ═══════════════════════════════════════════════════ -->
+      <section class="spf-section reveal visible" id="studyPlanFlowchart" aria-label="Study plan flowchart">
+
+        <div class="spf-header-row">
+          <span class="section-tag">Study Roadmap</span>
+          <h2 class="spf-title"><i class="fa-solid fa-route"></i> Step-by-Step Study Plan</h2>
+          <p class="spf-subtitle" id="spfPlanDesc">Interview within a week — high-impact topics with daily decision checkpoints</p>
+        </div>
+
+        <!-- Plan tab switcher -->
+        <div class="spf-tabs" role="tablist" aria-label="Study plan duration">
+          <button class="spf-tab-btn active" data-plan="5day" role="tab" aria-selected="true">
+            <i class="fa-solid fa-bolt"></i> 5 Days
+          </button>
+          <button class="spf-tab-btn" data-plan="1month" role="tab" aria-selected="false">
+            <i class="fa-solid fa-calendar"></i> 1 Month
+          </button>
+          <button class="spf-tab-btn" data-plan="3month" role="tab" aria-selected="false">
+            <i class="fa-solid fa-calendar-days"></i> 3 Months
+          </button>
+          <button class="spf-tab-btn spf-tab-btn--working" data-plan="working" role="tab" aria-selected="false">
+            <i class="fa-solid fa-briefcase"></i> Working Pro
+          </button>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="spf-progress-row">
+          <div class="spf-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div class="spf-progress-fill" id="spfProgressFill"></div>
+          </div>
+          <span class="spf-progress-label" id="spfProgressLabel">0 / 0 stages complete</span>
+          <button class="spf-reset-btn" id="spfResetBtn" title="Reset progress for this plan">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+
+        <!-- Flowchart canvas (rendered by JS) -->
+        <div class="spf-flowchart" id="spfFlowchart" aria-live="polite"></div>
+
+        <!-- Daily loop strip -->
+        <div class="spf-daily-wrap">
+          <p class="spf-daily-title"><i class="fa-solid fa-repeat"></i> Daily study loop — repeat every day</p>
+          <div class="spf-daily-loop" id="spfDailyLoop"></div>
+        </div>
+
+      </section>
+      <!-- ═══════════════════════════════════════════════════ -->
+
       <div class="interview-prep-note reveal visible">
         <div class="prep-card">
           <i class="fa-solid fa-lightbulb"></i>
@@ -180,6 +230,7 @@
   <script src="js/interview-music-audio.js" defer></script>
   <script src="js/interview-tts.js" defer></script>
   <script src="js/interview.js" defer></script>
+  <script src="js/study-plan.js" defer></script>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
