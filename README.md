@@ -6,7 +6,7 @@ Modern single-page portfolio for a Mobile App Developer (Android & Flutter), hos
 
 ## Features
 
-- **Interview Prep** — `interview.html` with 194 Q&A including **Behavioral & HR** (What / Why / How, lazy load, TTS). Edit `js/deep-qa-content.js`, `js/deep-qa-extra.js`, `js/deep-qa-behavioral.js`, then `node js/build-interview.js`.
+- **Interview Prep** — `interview.html` with 194 Q&A including **Behavioral & HR** (What / Why / How, lazy load, TTS) and an interactive **Study Plan** flowchart (5-day / 1-month / 3-month / working pro). Edit `js/deep-qa-content.js`, `js/deep-qa-extra.js`, `js/deep-qa-behavioral.js`, then `node js/build-interview.js`.
 
 ## Stack
 
