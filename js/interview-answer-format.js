@@ -55,7 +55,23 @@
   }
 
   function isFlowLine(line) {
-    return /→|->/.test(line) && line.length < 120;
+    return /→|->/.test(line) && line.length < 220 && !/[`*]/.test(line);
+  }
+
+  function inlineMarkup(raw) {
+    let s = escapeHtml(raw);
+    s = s.replace(/`([^`]+)`/g, '<code class="iqa-code-inline">$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+    return s;
+  }
+
+  function renderCodeBlock(code, lang) {
+    const trimmed = code.replace(/^\n+/, "").replace(/\s+$/, "");
+    const label = lang
+      ? `<span class="iqa-code-lang">${escapeHtml(lang)}</span>`
+      : "";
+    return `<div class="iqa-code-block">${label}<pre><code>${escapeHtml(trimmed)}</code></pre></div>`;
   }
 
   function formatFlow(line) {
@@ -76,35 +92,44 @@
     const trimmed = line.trim();
     if (!trimmed) return "";
 
-    const flow = formatFlow(trimmed);
-    if (flow) return flow;
+    if (isFlowLine(trimmed)) {
+      const flow = formatFlow(trimmed);
+      if (flow) return flow;
+    }
 
-    if (isCodeLine(trimmed)) {
+    const heading = trimmed.match(/^#{1,6}\s+(.*)$/);
+    if (heading) {
+      return `<p class="iqa-subhead"><strong>${inlineMarkup(heading[1])}</strong></p>`;
+    }
+
+    if (isCodeLine(trimmed) && !/[`*]/.test(trimmed)) {
       return `<pre class="iqa-inline-code"><code>${escapeHtml(trimmed)}</code></pre>`;
     }
 
     if (/^(Example|Output|Problems in|Other problems|Compared to|Order:|Memory:|Kotlin code)/i.test(trimmed)) {
       const colon = trimmed.indexOf(":");
       if (colon >= 0) {
-        return `<p class="iqa-sublead"><strong>${escapeHtml(trimmed.slice(0, colon + 1))}</strong> ${escapeHtml(trimmed.slice(colon + 1).trim())}</p>`;
+        return `<p class="iqa-sublead"><strong>${escapeHtml(trimmed.slice(0, colon + 1))}</strong> ${inlineMarkup(trimmed.slice(colon + 1).trim())}</p>`;
       }
-      return `<p class="iqa-sublead"><strong>${escapeHtml(trimmed)}</strong></p>`;
+      return `<p class="iqa-sublead"><strong>${inlineMarkup(trimmed)}</strong></p>`;
     }
 
     if (/^[-•]\s+/.test(trimmed)) {
-      return `<li>${escapeHtml(trimmed.replace(/^[-•]\s+/, ""))}</li>`;
+      return `<li>${inlineMarkup(trimmed.replace(/^[-•]\s+/, ""))}</li>`;
     }
 
-    return `<p>${escapeHtml(trimmed)}</p>`;
+    return `<p>${inlineMarkup(trimmed)}</p>`;
   }
 
-  function formatSectionBody(content) {
-    const lines = content.split("\n");
+  function formatTextBlock(text) {
+    if (!text || !text.trim()) return "";
+    const lines = text.split("\n");
     let html = "";
     let inList = false;
 
     lines.forEach((line) => {
       const piece = formatLine(line);
+      if (!piece) return;
       if (piece.startsWith("<li>")) {
         if (!inList) {
           html += "<ul class=\"iqa-bullet-list\">";
@@ -120,6 +145,21 @@
       }
     });
     if (inList) html += "</ul>";
+    return html;
+  }
+
+  function formatSectionBody(content) {
+    const fenceRe = /```([a-zA-Z0-9]+)?\n?([\s\S]*?)```/g;
+    let html = "";
+    let lastIndex = 0;
+    let match;
+
+    while ((match = fenceRe.exec(content)) !== null) {
+      html += formatTextBlock(content.slice(lastIndex, match.index));
+      html += renderCodeBlock(match[2] || "", match[1] || "");
+      lastIndex = fenceRe.lastIndex;
+    }
+    html += formatTextBlock(content.slice(lastIndex));
     return html;
   }
 

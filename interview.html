@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Interview Prep — Mukesh Kumar Patel</title>
-  <meta name="description" content="194 technical and behavioral interview Q&A — Java, Kotlin, Android, DSA, Architecture, and HR/Infosys prep with English and Hindi answers.">
+  <meta name="description" content="193 technical and behavioral interview Q&A — Java, Kotlin, Android, DSA, Architecture, and HR/Infosys prep with English and Hindi answers.">
   <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6ee7b7">
@@ -24,7 +24,9 @@
     <nav class="nav container" aria-label="Interview prep">
       <a href="index.html" class="nav-logo">MK<span class="accent">.</span></a>
       <a href="index.html" class="btn btn-outline btn-sm nav-back">
-        <i class="fa-solid fa-arrow-left"></i> Back to Portfolio
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        <span class="nav-back-long">Back to Portfolio</span>
+        <span class="nav-back-short">Back</span>
       </a>
     </nav>
   </header>
@@ -34,53 +36,90 @@
       <div class="interview-bottom-header reveal visible">
         <span class="section-tag">Interview Prep</span>
         <h1>Java, Kotlin, Android & Architecture Q&A</h1>
-        <p class="section-desc">194 in-depth questions — technical + <strong>Behavioral &amp; HR</strong> (Infosys mock), <strong>What → Why → How</strong> cards, visuals, and <strong>text-to-speech</strong> in English or Hindi.</p>
+        <p class="section-desc">193 in-depth questions — technical + <strong>Behavioral &amp; HR</strong> (Infosys mock), <strong>What → Why → How</strong> cards, visuals, and <strong>text-to-speech</strong> in English or Hindi.</p>
       </div>
 
             <!-- ═══════════════════════════════════════════════════
            STUDY PLAN FLOWCHART + DECISION TREE
            ═══════════════════════════════════════════════════ -->
-      <section class="spf-section reveal visible" id="studyPlanFlowchart" aria-label="Study plan flowchart">
+      <section class="spf-section reveal visible" id="studyPlanFlowchart" aria-label="Study roadmap">
 
         <div class="spf-header-row">
           <span class="section-tag">Study Roadmap</span>
-          <h2 class="spf-title"><i class="fa-solid fa-route"></i> Step-by-Step Study Plan</h2>
-          <p class="spf-subtitle" id="spfPlanDesc">Interview within a week — high-impact topics with daily decision checkpoints</p>
+          <h2 class="spf-title"><i class="fa-solid fa-route"></i> Your Interview Study Plan</h2>
+          <p class="spf-subtitle" id="spfPlanDesc">Interview within a week — high-impact topics with daily checkpoints</p>
+        </div>
+
+        <div class="spf-howto" aria-label="How to use the study roadmap">
+          <div class="spf-howto-step">
+            <span class="spf-howto-num">1</span>
+            <p><strong>Pick a plan</strong> below that matches your timeline.</p>
+          </div>
+          <div class="spf-howto-step">
+            <span class="spf-howto-num">2</span>
+            <p><strong>Open each stage</strong>, follow the tasks, then mark complete.</p>
+          </div>
+          <div class="spf-howto-step">
+            <span class="spf-howto-num">3</span>
+            <p><strong>Pass checkpoints</strong> before moving on — use the Q&amp;A tabs above the list.</p>
+          </div>
         </div>
 
         <!-- Plan tab switcher -->
         <div class="spf-tabs" role="tablist" aria-label="Study plan duration">
           <button class="spf-tab-btn active" data-plan="5day" role="tab" aria-selected="true">
-            <i class="fa-solid fa-bolt"></i> 5 Days
+            <i class="fa-solid fa-bolt"></i>
+            <span class="spf-tab-text">
+              <span class="spf-tab-label">5 Days</span>
+              <span class="spf-tab-hint">Crash · interview this week</span>
+            </span>
           </button>
           <button class="spf-tab-btn" data-plan="1month" role="tab" aria-selected="false">
-            <i class="fa-solid fa-calendar"></i> 1 Month
+            <i class="fa-solid fa-calendar"></i>
+            <span class="spf-tab-text">
+              <span class="spf-tab-label">1 Month</span>
+              <span class="spf-tab-hint">All topics · 3 mocks</span>
+            </span>
           </button>
           <button class="spf-tab-btn" data-plan="3month" role="tab" aria-selected="false">
-            <i class="fa-solid fa-calendar-days"></i> 3 Months
+            <i class="fa-solid fa-calendar-days"></i>
+            <span class="spf-tab-text">
+              <span class="spf-tab-label">3 Months</span>
+              <span class="spf-tab-hint">Deep mastery · senior prep</span>
+            </span>
           </button>
           <button class="spf-tab-btn spf-tab-btn--working" data-plan="working" role="tab" aria-selected="false">
-            <i class="fa-solid fa-briefcase"></i> Working Pro
+            <i class="fa-solid fa-briefcase"></i>
+            <span class="spf-tab-text">
+              <span class="spf-tab-label">Working Pro</span>
+              <span class="spf-tab-hint">45–60 min · evenings only</span>
+            </span>
           </button>
+        </div>
+
+        <div class="spf-plan-meta" id="spfPlanMeta" aria-live="polite">
+          <span class="spf-meta-item" id="spfMetaTime"><i class="fa-regular fa-clock"></i> 3–4 hrs/day</span>
+          <span class="spf-meta-item" id="spfMetaFor"><i class="fa-solid fa-bullseye"></i> Interview in ≤ 7 days</span>
         </div>
 
         <!-- Progress bar -->
         <div class="spf-progress-row">
-          <div class="spf-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div class="spf-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="spfProgressLabel">
             <div class="spf-progress-fill" id="spfProgressFill"></div>
           </div>
-          <span class="spf-progress-label" id="spfProgressLabel">0 / 0 stages complete</span>
-          <button class="spf-reset-btn" id="spfResetBtn" title="Reset progress for this plan">
+          <span class="spf-progress-label" id="spfProgressLabel">0 of 0 stages done</span>
+          <button class="spf-reset-btn" id="spfResetBtn" type="button" title="Reset progress for this plan" aria-label="Reset progress for this plan">
             <i class="fa-solid fa-rotate-left"></i>
           </button>
         </div>
 
-        <!-- Flowchart canvas (rendered by JS) -->
+        <!-- Roadmap stages (rendered by JS) -->
         <div class="spf-flowchart" id="spfFlowchart" aria-live="polite"></div>
 
-        <!-- Daily loop strip -->
+        <!-- Daily loop -->
         <div class="spf-daily-wrap">
-          <p class="spf-daily-title"><i class="fa-solid fa-repeat"></i> Daily study loop — repeat every day</p>
+          <p class="spf-daily-title"><i class="fa-solid fa-repeat"></i> Daily routine — repeat every study day</p>
+          <p class="spf-daily-desc" id="spfDailyDesc">Same rhythm each day while you follow the stages above.</p>
           <div class="spf-daily-loop" id="spfDailyLoop"></div>
         </div>
 
@@ -91,7 +130,7 @@
       <div class="interview-toolbar reveal visible">
         <div class="interview-search-wrap">
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input type="search" id="interviewSearch" class="interview-search" placeholder="Search questions… (e.g. MVVM, coroutines, HashMap)" autocomplete="off" aria-label="Search interview questions">
+          <input type="search" id="interviewSearch" class="interview-search" placeholder="Search questions…" autocomplete="off" aria-label="Search interview questions">
         </div>
         <div class="interview-actions">
           <button type="button" class="btn btn-outline btn-sm" id="interviewExpandAll">Expand all</button>
@@ -112,7 +151,7 @@
         <span class="interview-tts-toolbar-title">
           <i class="fa-solid fa-headphones" aria-hidden="true"></i> Text to speech
         </span>
-        <span class="interview-tts-hint">📱 Indian tone: Microsoft Neerja Online (Natural) - English (India) (Preview) · Microsoft Madhur Online (Natural) - Hindi (India)</span>
+        <span class="interview-tts-hint" title="Windows: Settings → Time &amp; language → Speech — install English (India) Neerja and Hindi Madhur for natural Indian tone.">Recommended: Indian English or Hindi voices for clearest TTS.</span>
         <div class="interview-tts-controls">
           <div class="interview-tts-rate-wrap">
             <label for="interviewTtsVoiceEn">English voice</label>

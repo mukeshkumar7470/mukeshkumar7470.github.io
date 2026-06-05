@@ -8,8 +8,11 @@
   /* ─── Plan Data ─────────────────────────────────────────── */
   const PLANS = {
     '5day': {
-      title: '⚡ 5-Day Crash Plan',
-      desc: 'Interview within a week — high-impact topics with daily decision checkpoints',
+      title: '5-Day Crash Plan',
+      desc: 'Cover the highest-impact topics day by day. Finish each stage, pass the checkpoint, then move on.',
+      dailyTime: '3–4 hours/day',
+      bestFor: 'Interview within 7 days',
+      dailyDesc: 'Read in the morning, listen at midday, speak answers in the evening.',
       nodes: [
         {
           id: 's', type: 'start', color: 'mint',
@@ -17,107 +20,121 @@
         },
         {
           id: 'd0', type: 'step', color: 'mint', icon: 'fa-clipboard-list',
-          label: 'Day 0 — Evening Setup',
+          label: 'Day 0 — Setup (evening)',
+          focus: 'Behavioral · CV',
           tasks: [
-            'Write your 90-sec "Tell me about yourself" script',
-            'Pick 2 best projects — write STAR outline for each',
-            'Open interview.html → skim Behavioral & HR tab',
-            'List your 5 strongest skills with proof examples'
+            'Write your 90-second intro ("Tell me about yourself")',
+            'Pick 2 projects — outline STAR story for each',
+            'Skim the Behavioral & HR tab on this page',
+            'List 5 skills you can prove with examples'
           ]
         },
         {
           id: 'c0', type: 'decision',
-          q: 'Can you speak your intro fluently without reading?',
-          yes: 'Day 1 →', no: 'Practice 3× more in front of mirror'
+          q: 'Can you say your intro smoothly without reading?',
+          yes: 'Go to Day 1',
+          no: 'Practice 3 more times in front of a mirror'
         },
         {
           id: 'd1', type: 'step', color: 'blue', icon: 'fa-mug-hot',
-          label: 'Day 1 — Java + OOP',
+          label: 'Day 1 — Java & OOP',
+          focus: 'Java · OOP tabs',
           tasks: [
-            'Java tab: HashMap internals, ArrayList vs LinkedList, exceptions',
-            'OOP tab: inheritance, polymorphism, Parcelable vs Serializable',
-            'Speak 8 answers aloud without reading',
-            'TTS listen 30 min · write 3 flashcards on weak spots'
+            'Java: HashMap, ArrayList vs LinkedList, exceptions',
+            'OOP: inheritance, polymorphism, Parcelable vs Serializable',
+            'Speak 8 answers aloud (What + Why + How)',
+            'Listen 30 min with TTS · write 3 flashcards on weak spots'
           ]
         },
         {
           id: 'c1', type: 'decision',
-          q: 'Can you explain Parcelable vs Serializable clearly?',
-          yes: 'Day 2 →', no: 'Re-read How section · write 1 flashcard'
+          q: 'Can you explain Parcelable vs Serializable in under 60 seconds?',
+          yes: 'Go to Day 2',
+          no: 'Re-read the How section · add 1 flashcard'
         },
         {
           id: 'd2', type: 'step', color: 'purple', icon: 'fa-code',
           label: 'Day 2 — Kotlin',
+          focus: 'Kotlin tab',
           tasks: [
-            'Null safety, data class, sealed class, extension functions',
+            'Null safety, data class, sealed class, extensions',
             'Coroutines: launch vs async, dispatchers, cancellation',
             'Flow, StateFlow, SharedFlow — cold vs hot',
-            'Practice mock one-liners: StateFlow vs SharedFlow, coroutines vs threads'
+            'Practice one-liners: StateFlow vs SharedFlow, coroutines vs threads'
           ]
         },
         {
           id: 'c2', type: 'decision',
           q: 'Can you explain coroutines end-to-end in 60 seconds?',
-          yes: 'Day 3 →', no: 'Re-read Why + How sections · speak 3 more times'
+          yes: 'Go to Day 3',
+          no: 'Re-read Why + How · speak it 3 more times'
         },
         {
           id: 'd3', type: 'step', color: 'android', icon: 'fa-mobile-screen',
-          label: 'Day 3 — Android Core',
+          label: 'Day 3 — Android core',
+          focus: 'Android tab',
           tasks: [
-            'Activity + Fragment lifecycle, configuration change',
-            'ViewModel, LiveData, StateFlow binding to UI',
-            'Room, Retrofit, Hilt — each in 2 sentences',
+            'Activity & Fragment lifecycle, config changes',
+            'ViewModel, LiveData, StateFlow → UI binding',
+            'Room, Retrofit, Hilt — 2 sentences each',
             'Draw from memory: UI → ViewModel → Repository → API/Room',
-            'Project Pitch #1 — 3-min STAR timed'
+            'Project pitch #1 — 3-minute STAR (timed)'
           ]
         },
         {
           id: 'c3', type: 'decision',
-          q: 'MVVM diagram from memory + Project Pitch under 3 min?',
-          yes: 'Day 4 →', no: 'Draw 3 more times · redo pitch with timer'
+          q: 'MVVM diagram from memory + project pitch under 3 minutes?',
+          yes: 'Go to Day 4',
+          no: 'Redraw diagram 3× · redo pitch with a timer'
         },
         {
           id: 'd4', type: 'step', color: 'dsa', icon: 'fa-sitemap',
-          label: 'Day 4 — DSA + Architecture',
+          label: 'Day 4 — DSA & architecture',
+          focus: 'DSA · Architecture tabs',
           tasks: [
             'DSA: HashMap, two pointers, stack, LRU Cache, BFS/DFS',
-            'State time + space complexity for all 5 patterns aloud',
-            'Architecture: Repository, SSOT, idempotency in Razorpay',
-            'Project Pitch #2 + whiteboard MVVM'
+            'Say time + space complexity for each pattern aloud',
+            'Architecture: Repository, SSOT, idempotency (payments example)',
+            'Project pitch #2 + whiteboard MVVM'
           ]
         },
         {
           id: 'c4', type: 'decision',
-          q: '5 DSA patterns with complexity + architecture story ready?',
-          yes: 'Day 5 →', no: 'Re-do DSA · 1 pattern per 30 min'
+          q: '5 DSA patterns with complexity + one architecture story ready?',
+          yes: 'Go to Day 5',
+          no: 'Spend 30 min per weak DSA pattern'
         },
         {
           id: 'd5', type: 'step', color: 'hr', icon: 'fa-user-tie',
-          label: 'Day 5 — Behavioral + Mock',
+          label: 'Day 5 — HR & mock interview',
+          focus: 'Behavioral · mock',
           tasks: [
-            'Read full Behavioral & HR tab — speak every answer aloud',
-            '45-min mock: 5 HR + 10 rapid-fire tech + 1 DSA problem',
-            'Write 3 questions for the panel',
-            'Check logistics: route/link, dress, resume prints, ID',
-            'STOP — no new topics after 8 PM',
-            'Sleep 7–8 hours'
+            'Behavioral & HR tab — speak every answer aloud',
+            '45-min mock: 5 HR + 10 tech rapid-fire + 1 DSA',
+            'Write 3 questions to ask the panel',
+            'Logistics: route/link, dress, resume, ID',
+            'Stop new topics after 8 PM · sleep 7–8 hours'
           ]
         },
         {
           id: 'c5', type: 'decision',
-          q: 'Mock complete, panel questions ready, logistics confirmed?',
-          yes: 'Interview day! →', no: 'Revisit fumbled answers · speak again once'
+          q: 'Mock done, panel questions ready, logistics confirmed?',
+          yes: 'Interview day',
+          no: 'Review fumbled answers once more'
         },
         {
           id: 'e', type: 'end', color: 'mint',
-          label: '✅ Interview Ready'
+          label: 'Ready for interview'
         }
       ]
     },
 
     '1month': {
-      title: '📅 1-Month Plan',
-      desc: 'All 7 tabs covered once · 3 mocks · solid project bank',
+      title: '1-Month Plan',
+      desc: 'Cover all 7 Q&A tabs once, with weekly checkpoints and 3 full mocks.',
+      dailyTime: '2–3 hours/day',
+      bestFor: 'Interview in 2–6 weeks',
+      dailyDesc: 'Steady daily rhythm — read, listen, speak, flashcards.',
       nodes: [
         {
           id: 's', type: 'start', color: 'mint',
@@ -198,14 +215,17 @@
         },
         {
           id: 'e', type: 'end', color: 'mint',
-          label: '✅ Month Complete — Interview Ready'
+          label: 'Month complete — interview ready'
         }
       ]
     },
 
     '3month': {
-      title: '🗓️ 3-Month Mastery Plan',
-      desc: 'Deep retention · 4 full mocks · senior-level architecture readiness',
+      title: '3-Month Mastery Plan',
+      desc: 'Deep retention, 4 full mocks, and senior-level architecture readiness.',
+      dailyTime: '1.5–2 hours/day',
+      bestFor: 'No fixed date · career growth',
+      dailyDesc: 'Consistent light daily practice with weekly mock reviews.',
       nodes: [
         {
           id: 's', type: 'start', color: 'mint',
@@ -268,14 +288,17 @@
         },
         {
           id: 'e', type: 'end', color: 'mint',
-          label: '🏆 3-Month Mastery Complete'
+          label: '3-month mastery complete'
         }
       ]
     },
 
     'working': {
-      title: '💼 Working Professional Plan',
-      desc: 'Currently employed · prep in evenings & weekends only · 45–60 min/day · 6-week realistic timeline',
+      title: 'Working Professional Plan',
+      desc: 'Prep after office hours — realistic 45–60 min on weekdays, longer sessions on weekends.',
+      dailyTime: '45–60 min weekdays',
+      bestFor: 'Full-time job · 6-week timeline',
+      dailyDesc: 'Commute listening, short lunch reads, focused evening speaking practice.',
       nodes: [
         {
           id: 's', type: 'start', color: 'mint',
@@ -398,7 +421,7 @@
         },
         {
           id: 'e', type: 'end', color: 'mint',
-          label: '✅ Working Pro — Interview Ready'
+          label: 'Ready for interview'
         }
       ]
     }
@@ -407,16 +430,16 @@
   /* ─── Daily Decision Loop ─────────────────────────────── */
   const DAILY_LOOPS = {
     default: [
-      { step: 1, color: 'blue',    icon: 'fa-book-open',  label: 'Morning · 30 min',  desc: 'Read 5 Q&A — What section only' },
-      { step: 2, color: 'purple',  icon: 'fa-headphones', label: 'Midday · 30 min',   desc: 'TTS listen — alternate English / Hindi' },
-      { step: 3, color: 'android', icon: 'fa-microphone', label: 'Evening · 45 min',  desc: 'Speak answers aloud — Why + How + project link' },
-      { step: 4, color: 'dsa',     icon: 'fa-pen',        label: 'Night · 10 min',    desc: 'Write 3 flashcards on today\'s weak spots' },
+      { step: 1, color: 'blue',    icon: 'fa-book-open',  label: 'Morning · 30 min',  desc: 'Read 5 questions — What section only' },
+      { step: 2, color: 'purple',  icon: 'fa-headphones', label: 'Midday · 30 min',   desc: 'Listen with TTS — English or Hindi' },
+      { step: 3, color: 'android', icon: 'fa-microphone', label: 'Evening · 45 min',  desc: 'Speak answers aloud — Why, How, project link' },
+      { step: 4, color: 'dsa',     icon: 'fa-pen',        label: 'Night · 10 min',    desc: 'Write 3 flashcards on weak spots' },
     ],
     working: [
-      { step: 1, color: 'purple',  icon: 'fa-train-subway', label: 'Commute · 20 min',  desc: 'TTS listen — English or Hindi voice' },
-      { step: 2, color: 'blue',    icon: 'fa-sun',          label: 'Lunch · 15 min',    desc: 'Read 2–3 Q (What only) — no pressure' },
-      { step: 3, color: 'android', icon: 'fa-moon',         label: '9 PM · 40 min',     desc: 'Speak answers + project link · no phone' },
-      { step: 4, color: 'dsa',     icon: 'fa-bed',          label: 'Before sleep · 5 min', desc: '1 flashcard only · then rest' },
+      { step: 1, color: 'purple',  icon: 'fa-train-subway', label: 'Commute · 20 min',     desc: 'TTS listen — English or Hindi' },
+      { step: 2, color: 'blue',    icon: 'fa-sun',          label: 'Lunch · 15 min',       desc: 'Read 2–3 questions (What only)' },
+      { step: 3, color: 'android', icon: 'fa-moon',         label: '9 PM · 40 min',        desc: 'Speak answers + link to your project' },
+      { step: 4, color: 'dsa',     icon: 'fa-bed',          label: 'Before sleep · 5 min', desc: 'Review 1 flashcard, then rest' },
     ]
   };
 
@@ -462,7 +485,7 @@
     return div;
   }
 
-  function createStepNode(node, planKey) {
+  function createStepNode(node, planKey, expandDefault) {
     const done = isDone(planKey, node.id);
     const c = colorIcon(node.color || 'mint');
     const div = document.createElement('div');
@@ -470,26 +493,38 @@
     div.dataset.id = node.id;
     div.style.setProperty('--spf-c', c);
 
+    const focusHtml = node.focus
+      ? `<span class="spf-step-focus"><i class="fa-solid fa-bookmark"></i>${node.focus}</span>`
+      : '';
+
     const tasksHtml = (node.tasks || []).map(t =>
-      `<li class="spf-task-item"><i class="fa-solid fa-circle-dot"></i><span>${t}</span></li>`
+      `<li class="spf-task-item"><span class="spf-task-bullet"></span><span>${t}</span></li>`
     ).join('');
+
+    const startOpen = expandDefault && !done;
 
     div.innerHTML = `
       <div class="spf-step-header">
         <span class="spf-step-icon"><i class="fa-solid ${node.icon || 'fa-circle'}"></i></span>
-        <strong class="spf-step-label">${node.label}</strong>
+        <div class="spf-step-titles">
+          <strong class="spf-step-label">${node.label}</strong>
+          ${focusHtml}
+        </div>
         <span class="spf-done-badge" aria-label="Completed"><i class="fa-solid fa-circle-check"></i></span>
-        <button class="spf-expand-btn" aria-expanded="false" aria-label="Toggle details">
+        <button class="spf-expand-btn" type="button" aria-expanded="${startOpen}" aria-label="Show or hide tasks">
           <i class="fa-solid fa-chevron-down"></i>
         </button>
       </div>
-      <div class="spf-step-body" hidden>
+      <div class="spf-step-body"${startOpen ? '' : ' hidden'}>
+        <p class="spf-task-heading">Tasks for this stage</p>
         <ul class="spf-task-list">${tasksHtml}</ul>
         <button class="spf-complete-btn" type="button">
           <i class="fa-solid ${done ? 'fa-rotate-left' : 'fa-check'}"></i>
-          <span>${done ? 'Mark Incomplete' : 'Mark Complete'}</span>
+          <span>${done ? 'Mark incomplete' : 'Mark complete'}</span>
         </button>
       </div>`;
+
+    if (startOpen) div.classList.add('spf-expanded');
 
     div.querySelector('.spf-expand-btn').addEventListener('click', () => {
       const body = div.querySelector('.spf-step-body');
@@ -506,7 +541,7 @@
       div.classList.toggle('spf-done', nowDone);
       const btn = div.querySelector('.spf-complete-btn');
       btn.querySelector('i').className = `fa-solid ${nowDone ? 'fa-rotate-left' : 'fa-check'}`;
-      btn.querySelector('span').textContent = nowDone ? 'Mark Incomplete' : 'Mark Complete';
+      btn.querySelector('span').textContent = nowDone ? 'Mark incomplete' : 'Mark complete';
       updateProgress(planKey);
     });
 
@@ -515,25 +550,21 @@
 
   function createDecisionNode(node) {
     const div = document.createElement('div');
-    div.className = 'spf-node spf-node--decision spf-enter';
+    div.className = 'spf-node spf-node--checkpoint spf-enter';
     div.dataset.id = node.id;
 
     div.innerHTML = `
-      <div class="spf-decision-wrap">
-        <div class="spf-diamond-shape">
-          <span class="spf-diamond-icon"><i class="fa-solid fa-code-branch"></i></span>
-        </div>
-        <p class="spf-decision-q">${node.q}</p>
-        <div class="spf-decision-branches">
+      <div class="spf-checkpoint-wrap">
+        <p class="spf-checkpoint-label"><i class="fa-solid fa-flag-checkered"></i> Checkpoint</p>
+        <p class="spf-checkpoint-q">${node.q}</p>
+        <div class="spf-checkpoint-branches">
           <div class="spf-branch spf-branch--yes">
-            <i class="fa-solid fa-check-circle"></i>
-            <strong>Yes</strong>
-            <small>${node.yes}</small>
+            <span class="spf-branch-head"><i class="fa-solid fa-check"></i> Yes</span>
+            <span class="spf-branch-action">${node.yes}</span>
           </div>
           <div class="spf-branch spf-branch--no">
-            <i class="fa-solid fa-rotate-left"></i>
-            <strong>No</strong>
-            <small>${node.no}</small>
+            <span class="spf-branch-head"><i class="fa-solid fa-rotate-left"></i> Not yet</span>
+            <span class="spf-branch-action">${node.no}</span>
           </div>
         </div>
       </div>`;
@@ -548,12 +579,20 @@
     return div;
   }
 
+  function firstIncompleteStepId(planKey) {
+    const plan = PLANS[planKey];
+    if (!plan) return null;
+    const step = plan.nodes.find(n => n.type === 'step' && !isDone(planKey, n.id));
+    return step ? step.id : null;
+  }
+
   function renderFlowchart(planKey) {
     const plan = PLANS[planKey];
     const canvas = document.getElementById('spfFlowchart');
     if (!canvas || !plan) return;
 
     canvas.innerHTML = '';
+    const expandId = firstIncompleteStepId(planKey);
 
     plan.nodes.forEach((node, i) => {
       let el;
@@ -562,7 +601,7 @@
       } else if (node.type === 'decision') {
         el = createDecisionNode(node);
       } else {
-        el = createStepNode(node, planKey);
+        el = createStepNode(node, planKey, node.id === expandId);
       }
 
       canvas.appendChild(el);
@@ -573,8 +612,24 @@
     });
 
     updateProgress(planKey);
+    updatePlanMeta(planKey);
     scheduleEntrance();
     renderDailyLoop(planKey);
+  }
+
+  function updatePlanMeta(planKey) {
+    const plan = PLANS[planKey];
+    if (!plan) return;
+
+    const desc = document.getElementById('spfPlanDesc');
+    const metaTime = document.getElementById('spfMetaTime');
+    const metaFor = document.getElementById('spfMetaFor');
+    const dailyDesc = document.getElementById('spfDailyDesc');
+
+    if (desc) desc.textContent = plan.desc;
+    if (metaTime) metaTime.innerHTML = `<i class="fa-regular fa-clock"></i> ${plan.dailyTime || 'Flexible'}`;
+    if (metaFor) metaFor.innerHTML = `<i class="fa-solid fa-bullseye"></i> ${plan.bestFor || ''}`;
+    if (dailyDesc) dailyDesc.textContent = plan.dailyDesc || DAILY_LOOPS.default[0].desc;
   }
 
   function renderDailyLoop(planKey) {
@@ -585,8 +640,8 @@
 
     if (title) {
       title.innerHTML = planKey === 'working'
-        ? '<i class="fa-solid fa-briefcase"></i> Daily loop for working professionals'
-        : '<i class="fa-solid fa-repeat"></i> Daily study loop — repeat every day';
+        ? '<i class="fa-solid fa-briefcase"></i> Daily routine — working professional'
+        : '<i class="fa-solid fa-repeat"></i> Daily routine — repeat every study day';
     }
 
     const loop = DAILY_LOOPS[planKey] || DAILY_LOOPS.default;
@@ -599,16 +654,16 @@
       div.innerHTML = `
         <span class="spf-loop-num">${item.step}</span>
         <span class="spf-loop-icon"><i class="fa-solid ${item.icon}"></i></span>
-        <div>
+        <div class="spf-loop-text">
           <strong>${item.label}</strong>
           <span>${item.desc}</span>
         </div>`;
       wrap.appendChild(div);
 
-      if (i < DAILY_LOOP.length - 1) {
+      if (i < loop.length - 1) {
         const sep = document.createElement('div');
         sep.className = 'spf-loop-sep';
-        sep.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        sep.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
         wrap.appendChild(sep);
       }
     });
@@ -626,7 +681,7 @@
     const pct = steps.length ? Math.round((done / steps.length) * 100) : 0;
 
     fill.style.width = pct + '%';
-    label.textContent = `${done} / ${steps.length} stages complete`;
+    label.textContent = `${done} of ${steps.length} stages done`;
 
     if (pct === 100) {
       fill.classList.add('spf-progress-fill--complete');
@@ -687,7 +742,7 @@
         btn.setAttribute('aria-selected', 'true');
 
         const desc = document.getElementById('spfPlanDesc');
-        if (desc) desc.textContent = PLANS[activePlan].desc;
+        if (desc && PLANS[activePlan]) desc.textContent = PLANS[activePlan].desc;
 
         renderFlowchart(activePlan);
       });
