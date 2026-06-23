@@ -6865,15 +6865,7 @@ Ek sentence example har ek.`
 A 60–90 second professional intro in this order: (1) who you are + years of experience, (2) core stack and domain, (3) 1–2 impact highlights, (4) what role you want now.
 
 Example structure:
-"I'm Mukesh Kumar Patel, a Mobile Application Developer with 4.5 years of experience building production Android and Flutter applications.
-
-I started at HackerKernel in Bhopal as a Junior Android Developer, where I built client-facing apps in Java and Kotlin, integrated REST APIs with Retrofit, and worked on a live GPS tracking app using Google Maps.
-
-My biggest growth phase was at Direct (ShopKirana) in Indore for 2.5 years. I worked on their B2B sales platform — the SK Agent app used by field agents across India. I led the Java-to-Kotlin migration, implemented MVVM with Dagger Hilt, built real-time chat with Socket.IO, integrated Razorpay, and an offline cart using Room so agents could work without internet. Toward the end I also worked on Flutter.
-
-Currently I'm at Netlink Software, focused on Flutter — building cross-platform apps with BLoC, integrating Razorpay and PhonePe, and handling Play Store and App Store releases. A project I'm proud of is MP eNagarpalika, a government app for Madhya Pradesh citizens — property tax, water tax, and municipal services — built with Clean Architecture and BLoC.
-
-Across my apps, we've crossed 50,000+ downloads with 4.0+ Play Store ratings. I'm strongest in Flutter BLoC, Android MVVM with Hilt, and payment integrations, and I'm actively improving my testing and CI/CD skills. I'm now looking for a role where I can deliver scalable mobile applications in a structured engineering environment."
+"I'm Mukesh Kumar Patel, a Mobile Application Developer with 4.5 years of experience building production Android and Flutter applications. I started at HackerKernel in Bhopal as a Junior Android Developer, where I built client-facing apps in Java and Kotlin, integrated REST APIs with Retrofit, and worked on a live GPS tracking app using Google Maps. My biggest growth phase was at Direct (ShopKirana) in Indore for 2.5 years. I worked on their B2B sales platform — the SK Agent app used by field agents across India. I led the Java-to-Kotlin migration, implemented MVVM with Dagger Hilt, built real-time chat with Socket.IO, integrated Razorpay, and an offline cart using Room so agents could work without internet. Toward the end I also worked on Flutter. Currently I'm at Netlink Software, focused on Flutter — building cross-platform apps with BLoC, integrating Razorpay and PhonePe, and handling Play Store and App Store releases. A project I'm proud of is MP eNagarpalika, a government app for Madhya Pradesh citizens — property tax, water tax, and municipal services — built with Clean Architecture and BLoC. Across my apps, we've crossed 50,000+ downloads with 4.0+ Play Store ratings. I'm strongest in Flutter BLoC, Android MVVM with Hilt, and payment integrations, and I'm actively improving my testing and CI/CD skills. I'm now looking for a role where I can deliver scalable mobile applications in a structured engineering environment."
 
 Why?
 
