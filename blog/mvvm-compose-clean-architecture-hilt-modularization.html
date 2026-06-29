@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVVM + Compose, Clean Architecture + Hilt, Modularization — Mukesh Kumar Patel</title>
+  <meta name="description" content="Modern Android architecture deep dive: MVVM with Jetpack Compose, Clean Architecture with Hilt, and feature-based Modularization — with diagrams and real code.">
+  <meta name="keywords" content="MVVM, Jetpack Compose, Clean Architecture, Hilt, Modularization, Android Architecture, Kotlin, StateFlow, Use Cases, Repository">
+  <link rel="canonical" href="https://mukeshkumar7470.github.io/blog/mvvm-compose-clean-architecture-hilt-modularization.html">
+  <meta property="og:title" content="MVVM + Compose, Clean Architecture + Hilt, Modularization">
+  <meta property="og:description" content="Modern Android architecture full deep dive with diagrams and code.">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/48297190?v=4">
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/blog.css">
+</head>
+<body class="blog-page">
+  <div class="bg-mesh" aria-hidden="true"></div>
+
+  <header class="site-header scrolled" id="header">
+    <nav class="nav container" aria-label="Main">
+      <a href="../index.html" class="nav-logo">MK<span class="accent">.</span></a>
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../interview.html">Interview Prep</a></li>
+        <li><a href="../blog.html" class="active">Blog</a></li>
+        <li><a href="../index.html#contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="blog-article">
+      <a href="../blog.html" class="blog-post-back">
+        <i class="fa-solid fa-arrow-left"></i> Back to Blog
+      </a>
+
+      <header class="blog-post-header">
+        <span class="blog-post-tag">Android · Intermediate</span>
+        <h1>MVVM + Compose, Clean Architecture + Hilt, Modularization</h1>
+        <div class="blog-post-meta">
+          <span><i class="fa-regular fa-calendar"></i> Jun 29, 2026</span>
+          <span><i class="fa-regular fa-clock"></i> 25 min read</span>
+          <span><i class="fa-solid fa-user"></i> Mukesh Kumar Patel</span>
+        </div>
+      </header>
+
+      <div class="blog-post-body">
+
+        <p>A complete walkthrough of <strong>MVVM + Compose</strong>, <strong>Clean Architecture + Hilt</strong>, and <strong>Modularization</strong> — built up step by step with diagrams and real code.</p>
+
+        <p>We'll use one running example: a <strong>News app</strong> with login, feed, and bookmarks.</p>
+
+        <hr>
+
+        <h2>Part 1: MVVM + Jetpack Compose</h2>
+
+        <h3>1.1 The Big Picture</h3>
+
+        <pre class="mermaid">
+flowchart LR
+    User([User]) -->|taps button| UI[Composable UI]
+    UI -->|calls function| VM[ViewModel]
+    VM -->|asks for data| Repo[Repository]
+    Repo -->|returns Flow| VM
+    VM -->|updates StateFlow| State[(UI State)]
+    State -->|recomposes| UI
+    UI -->|displays| User
+        </pre>
+
+        <p><strong>Key idea — Unidirectional Data Flow (UDF):</strong></p>
+        <ul>
+          <li>State flows <strong>down</strong> (ViewModel → UI)</li>
+          <li>Events flow <strong>up</strong> (UI → ViewModel)</li>
+        </ul>
+
+        <h3>1.2 The Three Pieces</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph V[View - Composable]
+        direction TB
+        V1[Stateless UI]
+        V2[Observes state]
+        V3[Sends events up]
+    end
+
+    subgraph VM[ViewModel]
+        direction TB
+        VM1[Holds UI state]
+        VM2[Survives rotation]
+        VM3[Calls UseCases]
+    end
+
+    subgraph M[Model - Data]
+        direction TB
+        M1[Repository]
+        M2[Network/DB]
+    end
+
+    V -->|user actions| VM
+    VM -->|StateFlow| V
+    VM &lt;--&gt; M
+        </pre>
+
+        <h3>1.3 Code — Login Screen with MVVM + Compose</h3>
+
+        <p><strong>UI State (single immutable object):</strong></p>
+
+<pre><code>data class LoginUiState(
+    val email: String = "",
+    val password: String = "",
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val isLoginSuccess: Boolean = false
+)</code></pre>
+
+        <p><strong>ViewModel:</strong></p>
+
+<pre><code>@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val loginUseCase: LoginUseCase
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow&lt;LoginUiState&gt; = _uiState.asStateFlow()
+
+    fun onEmailChange(email: String) {
+        _uiState.update { it.copy(email = email) }
+    }
+
+    fun onPasswordChange(password: String) {
+        _uiState.update { it.copy(password = password) }
+    }
+
+    fun onLoginClick() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            loginUseCase(_uiState.value.email, _uiState.value.password)
+                .onSuccess {
+                    _uiState.update { it.copy(isLoading = false, isLoginSuccess = true) }
+                }
+                .onFailure { e -&gt;
+                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                }
+        }
+    }
+}</code></pre>
+
+        <p><strong>Composable (stateless, driven by state):</strong></p>
+
+<pre><code>@Composable
+fun LoginScreen(
+    viewModel: LoginViewModel = hiltViewModel(),
+    onLoginSuccess: () -&gt; Unit
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.isLoginSuccess) {
+        if (state.isLoginSuccess) onLoginSuccess()
+    }
+
+    LoginContent(
+        state = state,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onLoginClick = viewModel::onLoginClick
+    )
+}
+
+@Composable
+private fun LoginContent(
+    state: LoginUiState,
+    onEmailChange: (String) -&gt; Unit,
+    onPasswordChange: (String) -&gt; Unit,
+    onLoginClick: () -&gt; Unit
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        OutlinedTextField(
+            value = state.email,
+            onValueChange = onEmailChange,
+            label = { Text("Email") }
+        )
+        OutlinedTextField(
+            value = state.password,
+            onValueChange = onPasswordChange,
+            label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation()
+        )
+        Button(
+            onClick = onLoginClick,
+            enabled = !state.isLoading
+        ) {
+            if (state.isLoading) CircularProgressIndicator() else Text("Login")
+        }
+        state.errorMessage?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
+    }
+}</code></pre>
+
+        <p><strong>Why this is good:</strong></p>
+        <ul>
+          <li><code>LoginContent</code> is <strong>stateless</strong> → previewable and testable</li>
+          <li>ViewModel survives configuration changes</li>
+          <li>Single source of truth: <code>uiState</code></li>
+        </ul>
+
+        <h3>1.4 State vs One-Shot Events</h3>
+
+        <pre class="mermaid">
+flowchart LR
+    subgraph State[StateFlow - Persistent]
+        S1[isLoading]
+        S2[user list]
+        S3[error text]
+    end
+
+    subgraph Events[Channel/SharedFlow - One-shot]
+        E1[Show Snackbar]
+        E2[Navigate to Detail]
+        E3[Show Toast]
+    end
+
+    State -->|always re-emitted| UI1[UI Recomposes]
+    Events -->|consumed once| UI2[UI Acts Once]
+        </pre>
+
+<pre><code>class HomeViewModel : ViewModel() {
+    val uiState: StateFlow&lt;HomeUiState&gt; = ...
+
+    private val _events = Channel&lt;HomeEvent&gt;(Channel.BUFFERED)
+    val events: Flow&lt;HomeEvent&gt; = _events.receiveAsFlow()
+}
+
+sealed interface HomeEvent {
+    data class ShowSnackbar(val msg: String) : HomeEvent
+    data object NavigateBack : HomeEvent
+}</code></pre>
+
+        <hr>
+
+        <h2>Part 2: Clean Architecture + Hilt</h2>
+
+        <h3>2.1 The Onion — Dependency Rule</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph Outer[Presentation Layer - Android]
+        UI[Composables]
+        VM[ViewModels]
+    end
+
+    subgraph Middle[Domain Layer - Pure Kotlin]
+        UC[Use Cases]
+        E[Entities]
+        RI[Repository Interfaces]
+    end
+
+    subgraph Inner[Data Layer]
+        RImpl[Repository Impl]
+        Remote[API / Retrofit]
+        Local[Room / DataStore]
+    end
+
+    UI --> VM
+    VM --> UC
+    UC --> RI
+    UC --> E
+    RImpl -.implements.-> RI
+    RImpl --> Remote
+    RImpl --> Local
+        </pre>
+
+        <p><strong>The Dependency Rule:</strong> arrows point <strong>inward</strong>. Domain knows nothing about Android, Room, or Retrofit.</p>
+
+        <h3>2.2 Data Flow Through Layers</h3>
+
+        <pre class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant C as Composable
+    participant V as ViewModel
+    participant UC as GetNewsUseCase
+    participant R as NewsRepository
+    participant API as NewsApi
+    participant DB as NewsDao
+
+    U->>C: Pull to refresh
+    C->>V: onRefresh()
+    V->>UC: invoke()
+    UC->>R: getNews()
+    R->>API: fetchNews()
+    API-->>R: List of NewsDto
+    R->>DB: insertAll(entities)
+    R->>DB: observeNews()
+    DB-->>R: Flow of NewsEntity list
+    R-->>UC: Flow of News list
+    UC-->>V: Flow of News list
+    V->>V: update StateFlow
+    V-->>C: new UiState
+    C-->>U: render list
+        </pre>
+
+        <h3>2.3 The Three Layers in Code</h3>
+
+        <h4>Domain Layer (pure Kotlin module — no Android)</h4>
+
+<pre><code>data class Article(
+    val id: String,
+    val title: String,
+    val content: String,
+    val isBookmarked: Boolean
+)
+
+interface NewsRepository {
+    fun observeArticles(): Flow&lt;List&lt;Article&gt;&gt;
+    suspend fun refreshArticles(): Result&lt;Unit&gt;
+    suspend fun toggleBookmark(id: String)
+}
+
+class GetArticlesUseCase @Inject constructor(
+    private val repo: NewsRepository
+) {
+    operator fun invoke(): Flow&lt;List&lt;Article&gt;&gt; = repo.observeArticles()
+}
+
+class ToggleBookmarkUseCase @Inject constructor(
+    private val repo: NewsRepository
+) {
+    suspend operator fun invoke(id: String) = repo.toggleBookmark(id)
+}</code></pre>
+
+        <h4>Data Layer</h4>
+
+<pre><code>@Entity(tableName = "articles")
+data class ArticleEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val content: String,
+    val isBookmarked: Boolean
+)
+
+@Dao
+interface ArticleDao {
+    @Query("SELECT * FROM articles")
+    fun observeAll(): Flow&lt;List&lt;ArticleEntity&gt;&gt;
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(items: List&lt;ArticleEntity&gt;)
+
+    @Query("UPDATE articles SET isBookmarked = :bookmarked WHERE id = :id")
+    suspend fun setBookmark(id: String, bookmarked: Boolean)
+}
+
+data class ArticleDto(val id: String, val title: String, val body: String)
+
+interface NewsApi {
+    @GET("articles")
+    suspend fun getArticles(): List&lt;ArticleDto&gt;
+}
+
+fun ArticleEntity.toDomain() = Article(id, title, content, isBookmarked)
+fun ArticleDto.toEntity() = ArticleEntity(id, title, body, isBookmarked = false)
+
+class NewsRepositoryImpl @Inject constructor(
+    private val api: NewsApi,
+    private val dao: ArticleDao
+) : NewsRepository {
+
+    override fun observeArticles(): Flow&lt;List&lt;Article&gt;&gt; =
+        dao.observeAll().map { list -&gt; list.map { it.toDomain() } }
+
+    override suspend fun refreshArticles(): Result&lt;Unit&gt; = runCatching {
+        val remote = api.getArticles()
+        dao.insertAll(remote.map { it.toEntity() })
+    }
+
+    override suspend fun toggleBookmark(id: String) {
+        val current = dao.observeAll().first().first { it.id == id }
+        dao.setBookmark(id, !current.isBookmarked)
+    }
+}</code></pre>
+
+        <h4>Presentation Layer</h4>
+
+<pre><code>data class FeedUiState(
+    val articles: List&lt;Article&gt; = emptyList(),
+    val isRefreshing: Boolean = false,
+    val error: String? = null
+)
+
+@HiltViewModel
+class FeedViewModel @Inject constructor(
+    getArticles: GetArticlesUseCase,
+    private val refreshArticles: RefreshArticlesUseCase,
+    private val toggleBookmark: ToggleBookmarkUseCase
+) : ViewModel() {
+
+    val uiState: StateFlow&lt;FeedUiState&gt; = getArticles()
+        .map { FeedUiState(articles = it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FeedUiState())
+
+    fun onRefresh() = viewModelScope.launch {
+        refreshArticles()
+    }
+
+    fun onBookmarkClick(id: String) = viewModelScope.launch {
+        toggleBookmark(id)
+    }
+}</code></pre>
+
+        <h3>2.4 Hilt — Dependency Injection Wiring</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    App[Application<br/>HiltAndroidApp] --> AppComp[ApplicationComponent]
+    AppComp --> NetMod[NetworkModule<br/>Provides Retrofit, OkHttp]
+    AppComp --> DbMod[DatabaseModule<br/>Provides Room]
+    AppComp --> RepoMod[RepositoryModule<br/>Binds Repo to Impl]
+
+    Act[Activity<br/>AndroidEntryPoint] --> ActComp[ActivityComponent]
+    VM[ViewModel<br/>HiltViewModel] --> VMComp[ViewModelComponent]
+
+    VMComp -.injects.-> UC[UseCase]
+    UC -.injects.-> Repo[Repository Interface]
+    RepoMod -.binds.-> Repo
+        </pre>
+
+        <p><strong>Application class:</strong></p>
+
+<pre><code>@HiltAndroidApp
+class NewsApp : Application()</code></pre>
+
+        <p><strong>Network module:</strong></p>
+
+<pre><code>@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+
+    @Provides @Singleton
+    fun provideOkHttp(): OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(HttpLoggingInterceptor())
+        .build()
+
+    @Provides @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl("https://api.example.com/")
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create())
+        .build()
+
+    @Provides @Singleton
+    fun provideNewsApi(retrofit: Retrofit): NewsApi = retrofit.create()
+}</code></pre>
+
+        <p><strong>Database module:</strong></p>
+
+<pre><code>@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+    @Provides @Singleton
+    fun provideDatabase(@ApplicationContext ctx: Context): AppDatabase =
+        Room.databaseBuilder(ctx, AppDatabase::class.java, "news.db").build()
+
+    @Provides
+    fun provideArticleDao(db: AppDatabase): ArticleDao = db.articleDao()
+}</code></pre>
+
+        <p><strong>Repository binding (interface → implementation):</strong></p>
+
+<pre><code>@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindNewsRepository(
+        impl: NewsRepositoryImpl
+    ): NewsRepository
+}</code></pre>
+
+        <p><strong>Activity entry point:</strong></p>
+
+<pre><code>@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent { NewsApp() }
+    }
+}</code></pre>
+
+        <h3>2.5 Hilt Scopes Cheat Sheet</h3>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Annotation</th><th>Lifetime</th><th>Use for</th></tr></thead>
+          <tbody>
+            <tr><td><code>@Singleton</code></td><td>App lifetime</td><td>Retrofit, Room, Repositories</td></tr>
+            <tr><td><code>@ActivityRetainedScoped</code></td><td>Across config changes</td><td>ViewModel-shared deps</td></tr>
+            <tr><td><code>@ViewModelScoped</code></td><td>Per ViewModel</td><td>Per-feature helpers</td></tr>
+            <tr><td><code>@ActivityScoped</code></td><td>Per Activity</td><td>Activity-only utils</td></tr>
+            <tr><td><code>@FragmentScoped</code></td><td>Per Fragment</td><td>Rare with Compose</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <hr>
+
+        <h2>Part 3: Modularization</h2>
+
+        <h3>3.1 Why Modularize?</h3>
+
+        <pre class="mermaid">
+flowchart LR
+    subgraph Mono[Monolithic :app]
+        M1[Everything in one module<br/>Slow builds<br/>Tangled dependencies]
+    end
+
+    subgraph Multi[Modular Project]
+        F1[:feature:login]
+        F2[:feature:feed]
+        F3[:feature:bookmarks]
+        C1[:core:network]
+        C2[:core:database]
+        C3[:core:ui]
+        D[:domain]
+        DA[:data]
+    end
+
+    Mono -->|Refactor| Multi
+        </pre>
+
+        <p><strong>Benefits:</strong></p>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Benefit</th><th>How</th></tr></thead>
+          <tbody>
+            <tr><td>Faster builds</td><td>Parallel + incremental compilation</td></tr>
+            <tr><td>Encapsulation</td><td>Hide implementation behind APIs</td></tr>
+            <tr><td>Team scaling</td><td>Teams own modules</td></tr>
+            <tr><td>Reusability</td><td>Use modules across apps</td></tr>
+            <tr><td>On-demand delivery</td><td>Dynamic feature modules</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <h3>3.2 Module Types</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    APP[:app<br/>Entry point<br/>DI graph]
+
+    subgraph Features
+        F1[:feature:login]
+        F2[:feature:feed]
+        F3[:feature:bookmarks]
+    end
+
+    subgraph Core[Core Modules]
+        C1[:core:ui]
+        C2[:core:designsystem]
+        C3[:core:common]
+    end
+
+    subgraph Data[Data and Domain]
+        D[:core:domain]
+        DA[:core:data]
+        N[:core:network]
+        DB[:core:database]
+    end
+
+    APP --> F1
+    APP --> F2
+    APP --> F3
+
+    F1 --> C1
+    F2 --> C1
+    F3 --> C1
+    F1 --> D
+    F2 --> D
+    F3 --> D
+
+    DA --> N
+    DA --> DB
+    DA -.implements.-> D
+    APP --> DA
+        </pre>
+
+        <h3>3.3 Folder Structure</h3>
+
+<pre><code>NewsApp/
+├── app/                          ← entry point, wires everything
+│   └── src/main/java/...App.kt
+│
+├── core/
+│   ├── common/                   ← Result, dispatchers, utils
+│   ├── designsystem/             ← Theme, Color, Typography, components
+│   ├── ui/                       ← shared composables (LoadingView, ErrorView)
+│   ├── domain/                   ← entities, use cases, repo interfaces
+│   ├── data/                     ← repo implementations
+│   ├── database/                 ← Room DB + DAOs
+│   └── network/                  ← Retrofit + DTOs
+│
+└── feature/
+    ├── login/                    ← LoginScreen + LoginViewModel
+    ├── feed/                     ← FeedScreen + FeedViewModel
+    └── bookmarks/                ← BookmarksScreen + BookmarksViewModel</code></pre>
+
+        <h3>3.4 Module-Level build.gradle.kts</h3>
+
+        <p><strong>:feature:feed/build.gradle.kts:</strong></p>
+
+<pre><code>plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
+}
+
+android {
+    namespace = "com.example.feature.feed"
+    compileSdk = 34
+    defaultConfig { minSdk = 24 }
+    buildFeatures { compose = true }
+}
+
+dependencies {
+    implementation(project(":core:domain"))
+    implementation(project(":core:ui"))
+    implementation(project(":core:designsystem"))
+
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+}</code></pre>
+
+        <p><strong>:core:domain/build.gradle.kts</strong> (pure Kotlin — no Android!):</p>
+
+<pre><code>plugins {
+    alias(libs.plugins.kotlin.jvm)
+}
+
+dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.javax.inject)
+}</code></pre>
+
+        <p><strong>settings.gradle.kts:</strong></p>
+
+<pre><code>include(":app")
+include(":core:common")
+include(":core:designsystem")
+include(":core:ui")
+include(":core:domain")
+include(":core:data")
+include(":core:database")
+include(":core:network")
+include(":feature:login")
+include(":feature:feed")
+include(":feature:bookmarks")</code></pre>
+
+        <h3>3.5 The API/Impl Pattern (Advanced)</h3>
+
+        <p>Hide implementations behind interfaces so features depend on <strong>what</strong>, not <strong>how</strong>.</p>
+
+        <pre class="mermaid">
+flowchart LR
+    F[:feature:feed] -->|depends on| API[:core:data-api<br/>Interfaces only]
+    APP[:app] -->|provides| IMPL[:core:data-impl<br/>Hilt Binds]
+    IMPL -.implements.-> API
+        </pre>
+
+        <p>This means a feature module can be compiled without knowing if Room or Realm is the backing store.</p>
+
+        <h3>3.6 Navigation Across Modules</h3>
+
+        <p>Each feature exposes its own navigation graph:</p>
+
+<pre><code>// :feature:feed
+const val FEED_ROUTE = "feed"
+
+fun NavGraphBuilder.feedScreen(onArticleClick: (String) -&gt; Unit) {
+    composable(FEED_ROUTE) {
+        FeedScreen(onArticleClick = onArticleClick)
+    }
+}
+
+fun NavController.navigateToFeed() = navigate(FEED_ROUTE)</code></pre>
+
+<pre><code>// :app — wires features together
+@Composable
+fun NewsNavHost(navController: NavHostController) {
+    NavHost(navController, startDestination = LOGIN_ROUTE) {
+        loginScreen(onLoginSuccess = { navController.navigateToFeed() })
+        feedScreen(onArticleClick = { id -&gt; navController.navigateToArticle(id) })
+        bookmarksScreen()
+    }
+}</code></pre>
+
+        <p><strong>Features never reference each other</strong> — only <code>:app</code> knows the full graph.</p>
+
+        <hr>
+
+        <h2>Part 4: Putting It All Together</h2>
+
+        <h3>4.1 Final Architecture Diagram</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph App[:app]
+        AppEntry[Application + MainActivity<br/>+ NavHost]
+    end
+
+    subgraph FeatureLayer[Feature Modules]
+        FL[:feature:login]
+        FF[:feature:feed]
+        FB[:feature:bookmarks]
+    end
+
+    subgraph UILayer[Presentation - inside each feature]
+        Comp[Composable Screens]
+        VM[ViewModels<br/>StateFlow]
+    end
+
+    subgraph DomainLayer[:core:domain - Pure Kotlin]
+        UC[Use Cases]
+        Ent[Entities]
+        RepoIf[Repository Interfaces]
+    end
+
+    subgraph DataLayer[:core:data + :core:network + :core:database]
+        RepoImpl[Repository Impls]
+        Api[Retrofit APIs]
+        Dao[Room DAOs]
+    end
+
+    App --> FL
+    App --> FF
+    App --> FB
+    FL --> UILayer
+    FF --> UILayer
+    FB --> UILayer
+    Comp --> VM
+    VM --> UC
+    UC --> RepoIf
+    RepoImpl -.implements.-> RepoIf
+    RepoImpl --> Api
+    RepoImpl --> Dao
+        </pre>
+
+        <h3>4.2 End-to-End Request Animation (Step by Step)</h3>
+
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant Screen as FeedScreen<br/>(Composable)
+    participant VM as FeedViewModel
+    participant UC as RefreshArticlesUseCase
+    participant Repo as NewsRepositoryImpl
+    participant API as NewsApi (Retrofit)
+    participant DB as ArticleDao (Room)
+    participant State as UiState (StateFlow)
+
+    User->>Screen: Pull to refresh
+    Screen->>VM: onRefresh()
+    VM->>State: isRefreshing = true
+    State-->>Screen: recompose (spinner)
+    VM->>UC: invoke()
+    UC->>Repo: refreshArticles()
+    Repo->>API: GET /articles
+    API-->>Repo: List of ArticleDto
+    Repo->>DB: insertAll(entities)
+    DB-->>Repo: Flow emits new list
+    Repo-->>UC: Result.success
+    UC-->>VM: Result.success
+    VM->>State: isRefreshing = false, articles updated
+    State-->>Screen: recompose (new list)
+    Screen-->>User: shows fresh articles
+        </pre>
+
+        <h3>4.3 Build Graph and Compilation Speedup</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    APP[:app] --> FL[:feature:login]
+    APP --> FF[:feature:feed]
+    APP --> FB[:feature:bookmarks]
+
+    FL --> UI[:core:ui]
+    FF --> UI
+    FB --> UI
+
+    FL --> DOM[:core:domain]
+    FF --> DOM
+    FB --> DOM
+
+    APP --> DATA[:core:data]
+    DATA --> NET[:core:network]
+    DATA --> DB[:core:database]
+    DATA --> DOM
+
+    style FL fill:#1a3a5c
+    style FF fill:#1a3a5c
+    style FB fill:#1a3a5c
+    style DOM fill:#1a4d3a
+    style NET fill:#4d4d1a
+    style DB fill:#4d4d1a
+        </pre>
+
+        <p><strong>Edit :feature:feed?</strong> Only <code>:feature:feed</code> + <code>:app</code> recompile. <code>:feature:login</code>, <code>:feature:bookmarks</code>, <code>:core:network</code>, <code>:core:database</code> are <strong>cached</strong>.</p>
+
+        <hr>
+
+        <h2>Part 5: Testing Strategy Across Layers</h2>
+
+        <pre class="mermaid">
+flowchart LR
+    subgraph Tests
+        U[Unit Tests<br/>JUnit + MockK]
+        I[Integration Tests<br/>Room in-memory<br/>MockWebServer]
+        UI[UI Tests<br/>Compose Test]
+    end
+
+    U --> Domain[Domain UseCases<br/>ViewModels]
+    I --> Data[Repositories<br/>DAOs<br/>APIs]
+    UI --> Screens[Composable Screens]
+        </pre>
+
+<pre><code>@Test
+fun `login success updates state to success`() = runTest {
+    val fakeRepo = FakeAuthRepository(success = true)
+    val useCase = LoginUseCase(fakeRepo)
+    val vm = LoginViewModel(useCase)
+
+    vm.onEmailChange("a@b.com")
+    vm.onPasswordChange("123")
+    vm.onLoginClick()
+    advanceUntilIdle()
+
+    assertTrue(vm.uiState.value.isLoginSuccess)
+}</code></pre>
+
+        <hr>
+
+        <h2>Part 6: Reference Project Structure (Now in Android style)</h2>
+
+        <pre class="mermaid">
+flowchart TB
+    APP[":app<br/>Application + Navigation"]
+
+    subgraph Features
+        L[":feature:login<br/>Screen + VM + DI"]
+        F[":feature:feed<br/>Screen + VM + DI"]
+        B[":feature:bookmarks<br/>Screen + VM + DI"]
+    end
+
+    subgraph Core
+        C1[":core:ui<br/>Shared composables"]
+        C2[":core:designsystem<br/>Theme + tokens"]
+        C3[":core:common<br/>Result, dispatchers"]
+    end
+
+    subgraph DomainData[Domain and Data]
+        D[":core:domain<br/>UseCases + Entities"]
+        DT[":core:data<br/>Repo Impls"]
+        N[":core:network<br/>Retrofit + DTOs"]
+        DB[":core:database<br/>Room + DAOs"]
+    end
+
+    APP --> L
+    APP --> F
+    APP --> B
+    APP --> DT
+
+    L --> D
+    F --> D
+    B --> D
+    L --> C1
+    F --> C1
+    B --> C1
+    C1 --> C2
+
+    DT --> D
+    DT --> N
+    DT --> DB
+    DT --> C3
+        </pre>
+
+        <hr>
+
+        <h2>Cheat Sheet: Layer to Responsibilities</h2>
+
+        <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>Module</th><th>Knows about</th><th>Doesn't know about</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>UI</strong></td><td><code>:feature:*</code></td><td>ViewModel, Compose</td><td>Repository impl, DB, API</td></tr>
+            <tr><td><strong>ViewModel</strong></td><td><code>:feature:*</code></td><td>UseCases, UI state</td><td>Composables (no Context!)</td></tr>
+            <tr><td><strong>Domain</strong></td><td><code>:core:domain</code></td><td>Entities, Repo interfaces</td><td>Android, Retrofit, Room</td></tr>
+            <tr><td><strong>Repository</strong></td><td><code>:core:data</code></td><td>API + DB + Domain</td><td>UI, ViewModels</td></tr>
+            <tr><td><strong>Data sources</strong></td><td><code>:core:network</code>, <code>:core:database</code></td><td>DTOs, Entities</td><td>Domain, UI</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <hr>
+
+        <h2>Recommended Learning Path</h2>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>Goal</th><th>Resource</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Build a single-module MVVM + Compose app</td><td><a href="https://developer.android.com/courses/jetpack-compose/course">Android Codelab</a></td></tr>
+            <tr><td>2</td><td>Add Hilt + Repository + Room + Retrofit</td><td><a href="https://developer.android.com/courses/pathways/android-architecture">Architecture Codelab</a></td></tr>
+            <tr><td>3</td><td>Split into <code>:domain</code>, <code>:data</code>, <code>:app</code></td><td>Clean Architecture sample</td></tr>
+            <tr><td>4</td><td>Modularize by feature</td><td><a href="https://github.com/android/nowinandroid">Now in Android</a></td></tr>
+            <tr><td>5</td><td>Add MVI/UDF + Paging 3 + WorkManager</td><td>Production-grade app</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <hr>
+
+        <h2>Next Steps</h2>
+
+        <p>If you want to go even deeper, here are some areas worth exploring:</p>
+
+        <ul>
+          <li>A complete <strong>runnable mini-project</strong> layout (every file shown)</li>
+          <li><strong>MVI</strong> variant with <code>Intent</code> + <code>Reducer</code></li>
+          <li><strong>Compose Navigation</strong> type-safe routes across modules</li>
+          <li><strong>Convention plugins</strong> (<code>build-logic</code>) to share Gradle config across modules</li>
+          <li><strong>Testing pyramid</strong> with full sample tests per layer</li>
+        </ul>
+
+        <div class="blog-post-cta">
+          <h3>New to Android architecture?</h3>
+          <p>Start with the absolute beginner guide that uses restaurant analogies and lots of diagrams to teach the same concepts from zero.</p>
+          <div class="blog-post-cta-actions">
+            <a href="android-architecture-for-beginners.html" class="btn btn-primary">
+              <i class="fa-solid fa-seedling"></i> Beginner Guide
+            </a>
+            <a href="../interview.html" class="btn btn-outline">
+              <i class="fa-solid fa-graduation-cap"></i> Interview Prep
+            </a>
+            <a href="../blog.html" class="btn btn-outline">
+              <i class="fa-solid fa-arrow-left"></i> All Posts
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p><a href="../index.html">← Portfolio</a> · &copy; <span id="year"></span> Mukesh Kumar Patel</p>
+      <a href="../blog.html" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-newspaper"></i> All posts
+      </a>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "dark",
+      themeVariables: {
+        background: "#0d0f17",
+        primaryColor: "#12141c",
+        primaryTextColor: "#e8eaef",
+        primaryBorderColor: "#6ee7b7",
+        lineColor: "#8b92a8",
+        secondaryColor: "#1a1d28",
+        tertiaryColor: "#0a0b10",
+        fontFamily: "Outfit, system-ui, sans-serif",
+        clusterBkg: "rgba(110, 231, 183, 0.05)",
+        clusterBorder: "rgba(110, 231, 183, 0.3)",
+        nodeBorder: "rgba(110, 231, 183, 0.4)",
+        mainBkg: "#12141c",
+        actorBkg: "#12141c",
+        actorBorder: "#6ee7b7",
+        actorTextColor: "#e8eaef",
+        actorLineColor: "#8b92a8",
+        signalColor: "#e8eaef",
+        signalTextColor: "#e8eaef",
+        labelBoxBkgColor: "#12141c",
+        labelBoxBorderColor: "#6ee7b7",
+        labelTextColor: "#e8eaef",
+        noteBkgColor: "#1a1d28",
+        noteBorderColor: "#a78bfa",
+        noteTextColor: "#e8eaef"
+      },
+      flowchart: { curve: "basis", padding: 16 },
+      sequence: { actorMargin: 50, boxMargin: 10, mirrorActors: false }
+    });
+  </script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

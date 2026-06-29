@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Architecture for Absolute Beginners — Mukesh Kumar Patel</title>
+  <meta name="description" content="Learn Android architecture from zero: MVVM, Clean Architecture, Hilt, and Modularization explained with flowcharts, diagrams, and beginner-friendly examples.">
+  <meta name="keywords" content="Android architecture, MVVM, Clean Architecture, Hilt, modularization, beginner Android, Jetpack Compose, ViewModel, StateFlow, Repository">
+  <link rel="canonical" href="https://mukeshkumar7470.github.io/blog/android-architecture-for-beginners.html">
+  <meta property="og:title" content="Android Architecture for Absolute Beginners">
+  <meta property="og:description" content="Beginner-friendly deep dive on Android architecture with diagrams and code.">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/48297190?v=4">
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/blog.css">
+</head>
+<body class="blog-page">
+  <div class="bg-mesh" aria-hidden="true"></div>
+
+  <header class="site-header scrolled" id="header">
+    <nav class="nav container" aria-label="Main">
+      <a href="../index.html" class="nav-logo">MK<span class="accent">.</span></a>
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../interview.html">Interview Prep</a></li>
+        <li><a href="../blog.html" class="active">Blog</a></li>
+        <li><a href="../index.html#contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="blog-article">
+      <a href="../blog.html" class="blog-post-back">
+        <i class="fa-solid fa-arrow-left"></i> Back to Blog
+      </a>
+
+      <header class="blog-post-header">
+        <span class="blog-post-tag">Android · Beginner</span>
+        <h1>Android Architecture for Absolute Beginners</h1>
+        <div class="blog-post-meta">
+          <span><i class="fa-regular fa-calendar"></i> Jun 29, 2026</span>
+          <span><i class="fa-regular fa-clock"></i> 15 min read</span>
+          <span><i class="fa-solid fa-user"></i> Mukesh Kumar Patel</span>
+        </div>
+      </header>
+
+      <div class="blog-post-body">
+
+        <p>Hey! Let's learn this together. I'll explain everything <strong>like you've never coded an Android app before</strong>. No jargon without explanation. Lots of pictures. Promise.</p>
+
+        <hr>
+
+        <h2>Chapter 1: What is "Architecture"? (The House Story)</h2>
+
+        <p>Imagine you want to build a <strong>house</strong>.</p>
+        <p>You have two choices:</p>
+
+        <pre class="mermaid">
+flowchart LR
+    subgraph Bad[Way 1: No Plan]
+        B1[Throw bricks<br/>wherever]
+        B2[Kitchen in bedroom]
+        B3[Toilet in living room]
+        B4[House falls down]
+    end
+
+    subgraph Good[Way 2: With a Plan]
+        G1[Foundation first]
+        G2[Walls next]
+        G3[Rooms organized]
+        G4[Strong house]
+    end
+        </pre>
+
+        <p><strong>Architecture in Android = the plan for your app.</strong></p>
+
+        <p>It tells you:</p>
+        <ul>
+          <li>Where to put what code</li>
+          <li>How different parts talk to each other</li>
+          <li>How to change things later without breaking everything</li>
+        </ul>
+
+        <p>That's it. No magic. Just organization.</p>
+
+        <hr>
+
+        <h2>Chapter 2: The Restaurant Story (Understanding the Layers)</h2>
+
+        <p>Forget code for a moment. Imagine a <strong>restaurant</strong>.</p>
+
+        <pre class="mermaid">
+flowchart TB
+    Customer([Customer<br/>You]) -->|orders food| Waiter
+    Waiter -->|tells the order| Chef
+    Chef -->|asks for ingredients| Storage[Storage Room<br/>Fridge + Pantry]
+    Storage -->|gives ingredients| Chef
+    Chef -->|cooks and gives food| Waiter
+    Waiter -->|serves| Customer
+        </pre>
+
+        <p><strong>Who does what?</strong></p>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Person</th><th>Job</th><th>Does NOT do</th></tr></thead>
+          <tbody>
+            <tr><td>Customer</td><td>Orders, eats</td><td>Cook, manage storage</td></tr>
+            <tr><td>Waiter</td><td>Takes order, serves</td><td>Cook, store food</td></tr>
+            <tr><td>Chef</td><td>Cooks</td><td>Greet customer, manage storage</td></tr>
+            <tr><td>Storage</td><td>Holds ingredients</td><td>Cook, talk to customer</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <p><strong>This is EXACTLY how Android apps are organized.</strong></p>
+
+        <pre class="mermaid">
+flowchart TB
+    User([User<br/>Customer]) -->|taps button| UI[UI<br/>Waiter]
+    UI -->|asks for data| VM[ViewModel<br/>Chef]
+    VM -->|gets data| Repo[Repository<br/>Storage Room]
+    Repo -->|returns data| VM
+    VM -->|gives ready data| UI
+    UI -->|shows on screen| User
+        </pre>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Restaurant</th><th>Android</th></tr></thead>
+          <tbody>
+            <tr><td>Customer</td><td>User</td></tr>
+            <tr><td>Waiter</td><td>UI (Buttons, Screens)</td></tr>
+            <tr><td>Chef</td><td>ViewModel</td></tr>
+            <tr><td>Storage</td><td>Repository (Database + Internet)</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <p><strong>One golden rule:</strong> The waiter doesn't cook. The chef doesn't serve. <strong>Each part has ONE job.</strong></p>
+
+        <hr>
+
+        <h2>Chapter 3: What Happens When You Tap a Button?</h2>
+
+        <p>Let's say you open Instagram and tap the <strong>heart</strong> icon to like a photo.</p>
+
+        <pre class="mermaid">
+sequenceDiagram
+    actor You
+    participant Screen as Screen<br/>(UI)
+    participant Brain as ViewModel<br/>(Brain)
+    participant Storage as Repository<br/>(Storage)
+    participant Internet as Internet<br/>(Server)
+
+    You->>Screen: Tap heart
+    Screen->>Brain: User tapped like!
+    Brain->>Storage: Save the like
+    Storage->>Internet: Tell server
+    Internet-->>Storage: Done!
+    Storage-->>Brain: Saved!
+    Brain-->>Screen: Show red heart
+    Screen-->>You: red heart
+        </pre>
+
+        <p><strong>Read it like a story:</strong></p>
+        <ol>
+          <li>You tap the heart</li>
+          <li>Screen tells the Brain: "Hey, user wants to like this!"</li>
+          <li>Brain tells Storage: "Please save this like"</li>
+          <li>Storage tells Internet: "Send this to server"</li>
+          <li>Internet says: "Done!"</li>
+          <li>Storage tells Brain: "All saved!"</li>
+          <li>Brain tells Screen: "Make the heart red"</li>
+          <li>You see the red heart</li>
+        </ol>
+
+        <p><strong>That's an entire architecture working.</strong> Just a chain of helpers, each doing one small job.</p>
+
+        <hr>
+
+        <h2>Chapter 4: Your First Real Example (Counter App)</h2>
+
+        <p>Let's build the simplest app ever: <strong>a button that counts how many times you tap it</strong>.</p>
+
+        <h3>The 3 Pieces</h3>
+
+        <pre class="mermaid">
+flowchart LR
+    subgraph Screen[1. Screen - What You See]
+        Btn[Button: Tap me]
+        Num[Number: 0]
+    end
+
+    subgraph Brain[2. Brain - ViewModel]
+        Counter[count = 0]
+        Func[increment]
+    end
+
+    Btn -->|tap!| Func
+    Func -->|count + 1| Counter
+    Counter -->|new number| Num
+        </pre>
+
+        <h3>The Code (Don't worry, I'll explain every line)</h3>
+
+        <h4>Step 1: The Brain (ViewModel)</h4>
+
+<pre><code>class CounterViewModel : ViewModel() {
+
+    // This holds the number. It starts at 0.
+    private val _count = MutableStateFlow(0)
+
+    // The screen will watch this.
+    val count: StateFlow&lt;Int&gt; = _count
+
+    // When user taps the button, this runs.
+    fun onTapClick() {
+        _count.value = _count.value + 1
+    }
+}</code></pre>
+
+        <p><strong>What's happening?</strong></p>
+        <ul>
+          <li><code>ViewModel</code> = the brain. It thinks. It remembers.</li>
+          <li><code>_count</code> = a box that holds the number 0.</li>
+          <li><code>MutableStateFlow</code> = a magic box that <strong>tells anyone watching</strong> when the number changes.</li>
+          <li><code>onTapClick()</code> = the function that runs when you tap.</li>
+        </ul>
+
+        <h4>Step 2: The Screen (Composable)</h4>
+
+<pre><code>@Composable
+fun CounterScreen(viewModel: CounterViewModel = viewModel()) {
+
+    // Watch the count. Whenever it changes, redraw the screen.
+    val count by viewModel.count.collectAsState()
+
+    Column {
+        Text("You tapped $count times")
+
+        Button(onClick = { viewModel.onTapClick() }) {
+            Text("Tap me!")
+        }
+    }
+}</code></pre>
+
+        <p><strong>What's happening?</strong></p>
+        <ul>
+          <li><code>@Composable</code> = "this is a piece of UI"</li>
+          <li><code>collectAsState()</code> = "watch the brain's number"</li>
+          <li>When user taps → call brain's function → brain updates number → screen sees new number → screen redraws</li>
+        </ul>
+
+        <h3>The Flow Animation</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    A[User sees: 0] -->|tap| B[Screen says: onTapClick!]
+    B --> C[Brain: count = 0 + 1 = 1]
+    C --> D[Brain shouts: New value is 1!]
+    D --> E[Screen hears: redraw with 1]
+    E --> F[User sees: 1]
+    F -->|tap again| G[count = 2]
+    G --> H[User sees: 2]
+        </pre>
+
+        <p><strong>That's MVVM.</strong> Yes, you just learned MVVM.</p>
+
+        <hr>
+
+        <h2>Chapter 5: What Do Those Scary Words Mean?</h2>
+
+        <p>Now let's name the things you saw:</p>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph MVVM
+        M[M = Model<br/>The data<br/>like: count = 5]
+        V[V = View<br/>What user sees<br/>Buttons, Text]
+        VM[VM = ViewModel<br/>The brain in middle]
+    end
+
+    V -->|user actions| VM
+    VM -->|data| V
+    VM &lt;--&gt; M
+        </pre>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Word</th><th>Means</th><th>Like in restaurant</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Model</strong></td><td>The actual data</td><td>The food itself</td></tr>
+            <tr><td><strong>View</strong></td><td>What user sees</td><td>The waiter showing the food</td></tr>
+            <tr><td><strong>ViewModel</strong></td><td>The brain connecting them</td><td>The chef</td></tr>
+            <tr><td><strong>MVVM</strong></td><td>Model + View + ViewModel together</td><td>The whole restaurant system</td></tr>
+            <tr><td><strong>Compose</strong></td><td>New way to draw screens in Android</td><td>Modern way to design plates</td></tr>
+            <tr><td><strong>StateFlow</strong></td><td>Magic box that shouts when changed</td><td>Bell on the counter</td></tr>
+            <tr><td><strong>Kotlin</strong></td><td>Programming language we use</td><td>The language everyone speaks</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <hr>
+
+        <h2>Chapter 6: Where Does Data Come From? (The Repository)</h2>
+
+        <p>Apps need data. From where?</p>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph Sources[Where data lives]
+        Internet[Internet<br/>Server somewhere]
+        Phone[Your Phone<br/>Local Database]
+        Memory[RAM<br/>Just for now]
+    end
+
+    Sources --> Repo[Repository<br/>The Manager]
+    Repo --> Brain[ViewModel]
+    Brain --> Screen[Screen]
+        </pre>
+
+        <p><strong>Repository = one place that knows where to get data.</strong></p>
+
+        <p>Without Repository:</p>
+        <ul>
+          <li>ViewModel has to know about internet</li>
+          <li>ViewModel has to know about database</li>
+          <li>ViewModel has to know about everything</li>
+          <li>ViewModel becomes a monster</li>
+        </ul>
+
+        <p>With Repository:</p>
+        <ul>
+          <li>ViewModel just asks Repository: "Give me data"</li>
+          <li>Repository decides: "Should I get from internet or phone?"</li>
+          <li>ViewModel doesn't care. Simple.</li>
+        </ul>
+
+        <h3>Example</h3>
+
+<pre><code>class UserRepository {
+
+    // Get user. First try phone. If not there, get from internet.
+    suspend fun getUser(id: String): User {
+
+        val userInPhone = database.findUser(id)
+        if (userInPhone != null) {
+            return userInPhone   // Found in phone, easy!
+        }
+
+        // Not in phone, ask the internet
+        val userFromInternet = api.fetchUser(id)
+        database.save(userFromInternet)   // Save for next time
+        return userFromInternet
+    }
+}</code></pre>
+
+        <p><strong>Now ViewModel just does:</strong></p>
+
+<pre><code>class ProfileViewModel(private val repo: UserRepository) : ViewModel() {
+    fun loadUser() {
+        viewModelScope.launch {
+            val user = repo.getUser("user123")
+            // Show on screen
+        }
+    }
+}</code></pre>
+
+        <p>ViewModel has NO IDEA whether the data came from internet or database. <strong>And it doesn't care!</strong> That's the beauty.</p>
+
+        <hr>
+
+        <h2>Chapter 7: Clean Architecture (The Building with Floors)</h2>
+
+        <p>Imagine a <strong>3-floor building</strong>:</p>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph Floor3[Floor 3: Presentation - What User Sees]
+        UI[Screens + ViewModels]
+    end
+
+    subgraph Floor2[Floor 2: Domain - The Rules]
+        UseCases[Use Cases<br/>Business Rules]
+    end
+
+    subgraph Floor1[Floor 1: Data - Where Data Lives]
+        Data[Repository + API + Database]
+    end
+
+    Floor3 -->|asks| Floor2
+    Floor2 -->|asks| Floor1
+    Floor1 -->|gives data back| Floor2
+    Floor2 -->|gives data back| Floor3
+        </pre>
+
+        <h3>What's a "Use Case"?</h3>
+
+        <p>A <strong>Use Case</strong> is ONE thing your app can do.</p>
+
+        <p>Examples:</p>
+        <ul>
+          <li>LoginUseCase → "Log the user in"</li>
+          <li>GetUserUseCase → "Get user info"</li>
+          <li>LikePhotoUseCase → "Like a photo"</li>
+          <li>LogoutUseCase → "Log the user out"</li>
+        </ul>
+
+        <p>Each Use Case does <strong>ONE job</strong>. That's it.</p>
+
+<pre><code>class LoginUseCase(private val repo: AuthRepository) {
+
+    // This is the only thing this class does. Login. Nothing else.
+    suspend operator fun invoke(email: String, password: String): Result&lt;User&gt; {
+        return repo.login(email, password)
+    }
+}</code></pre>
+
+        <h3>Why have Use Cases?</h3>
+
+        <pre class="mermaid">
+flowchart LR
+    subgraph Without[Without Use Cases]
+        VM1[ViewModel knows<br/>about Repository<br/>+ all business rules<br/>+ validation<br/>= BIG]
+    end
+
+    subgraph With[With Use Cases]
+        VM2[ViewModel] --> UC1[LoginUseCase]
+        VM2 --> UC2[ValidateEmailUseCase]
+        UC1 --> Repo[Repository]
+    end
+        </pre>
+
+        <p><strong>Without:</strong> ViewModel does everything = big mess.</p>
+        <p><strong>With:</strong> ViewModel just calls small Use Cases = neat and tidy.</p>
+
+        <hr>
+
+        <h2>Chapter 8: Hilt — The Magic Connector</h2>
+
+        <p>Look at this code:</p>
+
+<pre><code>class LoginViewModel(
+    private val loginUseCase: LoginUseCase  // where does this come from?
+)</code></pre>
+
+        <p><code>loginUseCase</code> needs a <code>Repository</code>. Repository needs an <code>API</code> and a <code>Database</code>. API needs <code>Retrofit</code>. Retrofit needs <code>OkHttp</code>.</p>
+
+        <p><strong>Without Hilt:</strong></p>
+
+<pre><code>val okHttp = OkHttp()
+val retrofit = Retrofit(okHttp)
+val api = Api(retrofit)
+val database = Database()
+val repo = Repository(api, database)
+val useCase = LoginUseCase(repo)
+val viewModel = LoginViewModel(useCase)</code></pre>
+
+        <p>You have to write ALL of this YOURSELF. For EVERY screen.</p>
+
+        <p><strong>With Hilt:</strong></p>
+
+<pre><code>@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val loginUseCase: LoginUseCase  // Hilt builds it!
+) : ViewModel()</code></pre>
+
+        <p>That's it. Hilt does all the wiring for you.</p>
+
+        <h3>The Hilt Story</h3>
+
+        <pre class="mermaid">
+flowchart TB
+    Hilt[Hilt - The Genie] -->|I need a ViewModel!| Build[Hilt builds it...]
+    Build --> Step1[Build OkHttp]
+    Build --> Step2[Build Retrofit]
+    Build --> Step3[Build API]
+    Build --> Step4[Build Database]
+    Build --> Step5[Build Repository]
+    Build --> Step6[Build UseCase]
+    Build --> Step7[Build ViewModel]
+    Step7 --> Done[Here's your ViewModel!]
+        </pre>
+
+        <p>You tell Hilt <strong>once</strong> how to build each thing. Then it builds everything automatically forever.</p>
+
+<pre><code>@Module
+@InstallIn(SingletonComponent::class)
+object AppModule {
+
+    @Provides
+    fun provideApi(): Api = Retrofit.Builder()
+        .baseUrl("https://api.example.com")
+        .build()
+        .create(Api::class.java)
+
+    @Provides
+    fun provideDatabase(@ApplicationContext ctx: Context): Database {
+        return Room.databaseBuilder(ctx, Database::class.java, "app.db").build()
+    }
+}</code></pre>
+
+        <p>After this, Hilt knows how to make an <code>Api</code> and a <code>Database</code>. Anywhere you need them, just write <code>@Inject</code>.</p>
+
+        <hr>
+
+        <h2>Chapter 9: Modularization (LEGO Blocks)</h2>
+
+        <p>Imagine your whole app is in <strong>ONE</strong> giant file. 100,000 lines.</p>
+
+        <p><strong>Problems:</strong></p>
+        <ul>
+          <li>Change one thing → rebuild EVERYTHING</li>
+          <li>Two developers → both editing same file → conflicts</li>
+          <li>Can't reuse code in another app</li>
+        </ul>
+
+        <p><strong>Solution: Break into LEGO blocks (modules)</strong></p>
+
+        <pre class="mermaid">
+flowchart TB
+    APP[:app<br/>Main app]
+
+    subgraph Features[Feature LEGOs]
+        F1[:feature:login]
+        F2[:feature:home]
+        F3[:feature:profile]
+    end
+
+    subgraph Tools[Shared Tool LEGOs]
+        T1[:core:network]
+        T2[:core:database]
+        T3[:core:ui]
+    end
+
+    APP --> F1
+    APP --> F2
+    APP --> F3
+    F1 --> T1
+    F2 --> T1
+    F3 --> T2
+    F1 --> T3
+    F2 --> T3
+    F3 --> T3
+        </pre>
+
+        <h3>Why is this awesome?</h3>
+
+        <pre class="mermaid">
+flowchart LR
+    Edit[You edit :feature:login] --> Rebuild[Only rebuild :feature:login + :app]
+    Edit2[Other modules?] --> Cached[Cached! Fast!]
+        </pre>
+
+        <p><strong>Build time goes from 5 minutes → 30 seconds.</strong></p>
+
+        <h3>Folder structure</h3>
+
+<pre><code>MyApp/
+├── app/                    ← entry point
+│
+├── feature/
+│   ├── login/             ← LEGO: login screen
+│   ├── home/              ← LEGO: home screen
+│   └── profile/           ← LEGO: profile screen
+│
+└── core/
+    ├── network/           ← LEGO: Retrofit stuff
+    ├── database/          ← LEGO: Room stuff
+    ├── ui/                ← LEGO: shared buttons/colors
+    └── domain/            ← LEGO: Use Cases + entities</code></pre>
+
+        <p>Each folder is <strong>independent</strong>. Like a LEGO block. You can take any block out and the rest still works (mostly).</p>
+
+        <hr>
+
+        <h2>Chapter 10: The Complete Picture</h2>
+
+        <p>Now let's put it ALL together. Here's a complete app's architecture:</p>
+
+        <pre class="mermaid">
+flowchart TB
+    User([User])
+
+    subgraph UI[1. UI Layer - What User Sees]
+        Screen[Compose Screen]
+        VM[ViewModel<br/>holds UI state]
+    end
+
+    subgraph Domain[2. Domain Layer - Business Rules]
+        UC[Use Cases<br/>One job each]
+    end
+
+    subgraph Data[3. Data Layer - Where Data Lives]
+        Repo[Repository]
+        API[Remote API]
+        DB[Local Database]
+    end
+
+    User -->|taps| Screen
+    Screen -->|action| VM
+    VM -->|call| UC
+    UC -->|ask data| Repo
+    Repo --> API
+    Repo --> DB
+    DB -->|data| Repo
+    API -->|data| Repo
+    Repo -->|data| UC
+    UC -->|data| VM
+    VM -->|state| Screen
+    Screen -->|shows| User
+        </pre>
+
+        <hr>
+
+        <h2>Chapter 11: Full Animation — Login Example</h2>
+
+        <p>You're going to log into an app. Watch what happens behind the scenes:</p>
+
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant Screen as Login Screen
+    participant VM as LoginViewModel
+    participant UC as LoginUseCase
+    participant Repo as AuthRepository
+    participant API as Server
+    participant DB as Database
+
+    User->>Screen: Types email + password
+    User->>Screen: Taps "Login"
+    Screen->>VM: onLoginClick()
+    VM->>VM: Show loading spinner
+    VM->>UC: invoke(email, password)
+    UC->>Repo: login(email, password)
+    Repo->>API: POST /login
+    API-->>Repo: Success + token
+    Repo->>DB: Save user info
+    DB-->>Repo: Saved
+    Repo-->>UC: Result.success(User)
+    UC-->>VM: Result.success(User)
+    VM->>VM: Hide spinner, success!
+    VM-->>Screen: Navigate to Home
+    Screen-->>User: Welcome home!
+        </pre>
+
+        <p><strong>Read it like a story.</strong> Each arrow is one step. Each character has one job.</p>
+
+        <hr>
+
+        <h2>Chapter 12: Common Mistakes Beginners Make</h2>
+
+        <pre class="mermaid">
+flowchart TB
+    subgraph Bad[Don't Do This]
+        B1[Put everything in Activity]
+        B2[Network call from Composable]
+        B3[Database access from ViewModel directly]
+        B4[Reference Activity in ViewModel]
+    end
+
+    subgraph Good[Do This]
+        G1[Composable to ViewModel to Repository]
+        G2[Repository handles network + DB]
+        G3[Use Hilt for dependencies]
+        G4[Keep ViewModel free of Android stuff]
+    end
+        </pre>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mistake</th><th>Better way</th></tr></thead>
+          <tbody>
+            <tr><td>Putting network code in <code>Activity</code></td><td>Put it in <code>Repository</code></td></tr>
+            <tr><td>Calling API directly from screen</td><td>Screen → ViewModel → UseCase → Repository</td></tr>
+            <tr><td>Holding <code>Context</code> in ViewModel (memory leak!)</td><td>Pass only data, no Context</td></tr>
+            <tr><td>Logic inside <code>@Composable</code></td><td>Logic in ViewModel</td></tr>
+            <tr><td>Mixing UI + business rules</td><td>Keep them in separate layers</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <hr>
+
+        <h2>Chapter 13: Your Learning Roadmap</h2>
+
+        <pre class="mermaid">
+flowchart LR
+    Step1[1. Learn Kotlin basics] --> Step2[2. Build a Counter app]
+    Step2 --> Step3[3. Add ViewModel + StateFlow]
+    Step3 --> Step4[4. Add Repository]
+    Step4 --> Step5[5. Add Retrofit + Room]
+    Step5 --> Step6[6. Add Hilt]
+    Step6 --> Step7[7. Add Use Cases]
+    Step7 --> Step8[8. Split into modules]
+    Step8 --> Pro[You're a pro!]
+        </pre>
+
+        <p><strong>Pace yourself.</strong> Don't try to learn everything in one day. Build small. Each step takes 1-2 weeks.</p>
+
+        <hr>
+
+        <h2>Chapter 14: Cheat Sheet (Print This)</h2>
+
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+          <tbody>
+            <tr><td>Where does UI go?</td><td><code>Composable</code> functions</td></tr>
+            <tr><td>Where does state go?</td><td><code>ViewModel</code> (in a <code>StateFlow</code>)</td></tr>
+            <tr><td>Where does business logic go?</td><td><code>UseCase</code> classes</td></tr>
+            <tr><td>Where does data fetching go?</td><td><code>Repository</code></td></tr>
+            <tr><td>How do I connect everything?</td><td><strong>Hilt</strong> with <code>@Inject</code></td></tr>
+            <tr><td>How do I update UI?</td><td>Update <code>StateFlow</code> in ViewModel</td></tr>
+            <tr><td>What survives screen rotation?</td><td><code>ViewModel</code></td></tr>
+            <tr><td>What should NOT be in ViewModel?</td><td>Anything Android-specific (Context, View)</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <hr>
+
+        <h2>Chapter 15: Real Talk</h2>
+
+        <p>You don't need ALL of this from day 1.</p>
+
+        <p><strong>Day 1:</strong> Just Composables + simple ViewModel + StateFlow.<br>
+        <strong>Day 30:</strong> Add Repository + Retrofit + Room.<br>
+        <strong>Day 90:</strong> Add Hilt + Use Cases.<br>
+        <strong>Day 180:</strong> Modularize.</p>
+
+        <pre class="mermaid">
+flowchart LR
+    Today[Today: You<br/>Knows nothing] --> M1[Month 1<br/>MVVM]
+    M1 --> M3[Month 3<br/>Repository]
+    M3 --> M6[Month 6<br/>Clean Arch]
+    M6 --> Y1[1 Year<br/>Modular]
+    Y1 --> Pro[Senior Android Dev]
+        </pre>
+
+        <p><strong>Every senior developer was a beginner once.</strong> Take it slow. Build things. Break things. Learn.</p>
+
+        <hr>
+
+        <h2>Final Words</h2>
+
+        <p><strong>Architecture is just organization.</strong> Don't be scared of fancy names like "MVVM" or "Clean Architecture." They all mean the same thing: <strong>separate your code so each part has one job</strong>.</p>
+
+        <p><strong>Start small.</strong> Build a Counter. Then a Todo. Then a News app. Each project teaches you one new piece.</p>
+
+        <p><strong>Ask for help.</strong> Stack Overflow, Reddit r/androiddev, the Android docs. Everyone was confused once.</p>
+
+        <p>You got this!</p>
+
+        <div class="blog-post-cta">
+          <h3>Want more like this?</h3>
+          <p>Check out my interview prep with 193+ questions covering Java, Kotlin, Android, DSA &amp; Architecture — with English &amp; Hindi answers.</p>
+          <div class="blog-post-cta-actions">
+            <a href="../interview.html" class="btn btn-primary">
+              <i class="fa-solid fa-graduation-cap"></i> Interview Prep
+            </a>
+            <a href="../blog.html" class="btn btn-outline">
+              <i class="fa-solid fa-arrow-left"></i> More Posts
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p><a href="../index.html">← Portfolio</a> · &copy; <span id="year"></span> Mukesh Kumar Patel</p>
+      <a href="../blog.html" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-newspaper"></i> All posts
+      </a>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "dark",
+      themeVariables: {
+        background: "#0d0f17",
+        primaryColor: "#12141c",
+        primaryTextColor: "#e8eaef",
+        primaryBorderColor: "#6ee7b7",
+        lineColor: "#8b92a8",
+        secondaryColor: "#1a1d28",
+        tertiaryColor: "#0a0b10",
+        fontFamily: "Outfit, system-ui, sans-serif",
+        clusterBkg: "rgba(110, 231, 183, 0.05)",
+        clusterBorder: "rgba(110, 231, 183, 0.3)",
+        nodeBorder: "rgba(110, 231, 183, 0.4)",
+        mainBkg: "#12141c",
+        actorBkg: "#12141c",
+        actorBorder: "#6ee7b7",
+        actorTextColor: "#e8eaef",
+        actorLineColor: "#8b92a8",
+        signalColor: "#e8eaef",
+        signalTextColor: "#e8eaef",
+        labelBoxBkgColor: "#12141c",
+        labelBoxBorderColor: "#6ee7b7",
+        labelTextColor: "#e8eaef",
+        noteBkgColor: "#1a1d28",
+        noteBorderColor: "#a78bfa",
+        noteTextColor: "#e8eaef"
+      },
+      flowchart: { curve: "basis", padding: 16 },
+      sequence: { actorMargin: 50, boxMargin: 10, mirrorActors: false }
+    });
+  </script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — Mukesh Kumar Patel</title>
+  <meta name="description" content="Mobile development blog by Mukesh Kumar Patel — Android, Kotlin, Flutter, Clean Architecture and more.">
+  <meta name="keywords" content="Android blog, Kotlin tutorial, Flutter blog, MVVM, Clean Architecture, Mukesh Kumar Patel">
+  <link rel="canonical" href="https://mukeshkumar7470.github.io/blog.html">
+  <meta property="og:title" content="Blog — Mukesh Kumar Patel">
+  <meta property="og:description" content="Beginner-friendly deep dives on Android, Kotlin, Flutter, and architecture.">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/48297190?v=4">
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/48297190?v=4" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/blog.css">
+</head>
+<body class="blog-page">
+  <div class="bg-mesh" aria-hidden="true"></div>
+
+  <header class="site-header scrolled" id="header">
+    <nav class="nav container" aria-label="Main">
+      <a href="index.html" class="nav-logo">MK<span class="accent">.</span></a>
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#experience">Experience</a></li>
+        <li><a href="index.html#projects">Projects</a></li>
+        <li><a href="index.html#skills">Skills</a></li>
+        <li><a href="interview.html">Interview Prep</a></li>
+        <li><a href="blog.html" class="active">Blog</a></li>
+        <li><a href="index.html#contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="blog-hero reveal visible">
+        <span class="section-tag">Blog</span>
+        <h1>Notes from the <span class="gradient-text">mobile trenches</span></h1>
+        <p>
+          Beginner-friendly deep dives on Android, Kotlin, Flutter, and architecture —
+          with diagrams, flowcharts, and real code you can copy into your project.
+        </p>
+      </section>
+
+      <section class="blog-grid">
+        <article class="blog-card reveal visible">
+          <span class="blog-card-tag">Android · Beginner</span>
+          <h2>
+            <a href="blog/android-architecture-for-beginners.html">
+              Android Architecture for Absolute Beginners
+            </a>
+          </h2>
+          <p>
+            Learn MVVM, Clean Architecture, Hilt, and Modularization from zero — explained
+            like you've never written an Android app before, with restaurant analogies,
+            flowcharts, and sequence diagrams.
+          </p>
+          <div class="blog-card-meta">
+            <span><i class="fa-regular fa-clock"></i> 15 min read</span>
+            <a href="blog/android-architecture-for-beginners.html" class="read-more">
+              Read post <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+
+        <article class="blog-card reveal visible">
+          <span class="blog-card-tag">Android · Intermediate</span>
+          <h2>
+            <a href="blog/mvvm-compose-clean-architecture-hilt-modularization.html">
+              MVVM + Compose, Clean Architecture + Hilt, Modularization
+            </a>
+          </h2>
+          <p>
+            A complete walkthrough of modern Android architecture — MVVM with Jetpack
+            Compose, Clean Architecture layers with Hilt, and feature-based modularization.
+            One running News-app example with diagrams and real code.
+          </p>
+          <div class="blog-card-meta">
+            <span><i class="fa-regular fa-clock"></i> 25 min read</span>
+            <a href="blog/mvvm-compose-clean-architecture-hilt-modularization.html" class="read-more">
+              Read post <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+
+        <article class="blog-card reveal visible" style="opacity: 0.55; pointer-events: none;">
+          <span class="blog-card-tag">Coming Soon</span>
+          <h2><a href="#">Flutter BLoC: From Setup to Scale</a></h2>
+          <p>
+            A practical walkthrough of BLoC pattern, repository wiring, and testing
+            strategies that survive a real production codebase.
+          </p>
+          <div class="blog-card-meta">
+            <span><i class="fa-regular fa-clock"></i> Coming soon</span>
+            <span class="read-more"><i class="fa-solid fa-lock"></i> Draft</span>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Mukesh Kumar Patel. Crafted with passion for mobile.</p>
+      <a href="index.html" class="btn btn-outline btn-sm">
+        <i class="fa-solid fa-house"></i> Home
+      </a>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
