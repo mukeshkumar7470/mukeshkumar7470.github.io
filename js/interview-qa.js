@@ -3628,42 +3628,174 @@ In-app events ke liye ab StateFlow/SharedFlow prefer. System events par hi recei
       q: "ContentProvider — purpose and FileProvider",
       en: `What?
 
-A **ContentProvider** exposes structured data to other apps via a **content://** URI and CRUD operations (\`query\`, \`insert\`, \`update\`, \`delete\`). Android Contacts, MediaStore use providers.
+**1. High-Level Elevator Pitch**
 
-Your app rarely implements a full provider unless sharing a database outward. Common interview topic: **FileProvider** (subclass of ContentProvider) — safely share \`content://\` URI for camera capture, PDF share, crop apps without \`file://\` exposure.
+"A **ContentProvider** is one of the four core Android app components. Its primary purpose is to securely manage and encapsulate access to a central repository of data, allowing it to be shared safely across different applications. **FileProvider** is a specialized subclass of ContentProvider that eliminates the risk of exposing raw file paths by generating secure, temporary \`content://\` URIs instead of \`file://\` URIs."
+
+**2. Core Concepts: ContentProvider**
+
+**The Core Purpose**
+
+In Android, apps are sandboxed; App A cannot read App B's internal database or files directly. A \`ContentProvider\` acts as a secure, standardized interface between the data layer and the outside world.
+
+- **Abstraction:** It abstracts the underlying storage mechanism. The client application doesn't care if the data is stored in a SQLite database, Room, a realm file, network storage, or plain text files.
+- **Inter-Process Communication (IPC):** It safely handles data transferring across process boundaries using standard CRUD operations (\`insert()\`, \`query()\`, \`update()\`, \`delete()\`).
+- **System integration:** It allows your app to read from or write to system data repositories like Contacts, Calendar, or the MediaStore.
+
+**How it Works (The Mechanics)**
+
+A client app interacts with a \`ContentProvider\` using a **ContentResolver**. Data is addressed using a unique **Content URI**:
+
+\`content://com.example.app.provider/users/5\`
+
+- **\`content://\`**: The scheme identifying it as a content URI.
+- **\`com.example.app.provider\`**: The **Authority**, a unique string used by the OS to find the correct provider in the system.
+- **\`users/5\`**: The path and ID indicating the specific table and row being requested.
+
+**3. Deep Dive: FileProvider**
+
+**The Problem It Solves**
+
+Historically, if you wanted to pass a file (like an image) to another app (like a cropping tool or email client), you passed a raw file path URI: \`file:///storage/emulated/0/DCIM/photo.jpg\`.
+
+This had massive flaws:
+
+1. **Security Risk:** The receiving app needed broad read/write permissions (\`READ_EXTERNAL_STORAGE\`) to access that exact path.
+2. **Scoped Storage Crash:** Starting in Android 7.0 (API 24), Android enforced Scoped Storage. Passing a \`file://\` URI across app boundaries throws a **FileUriExposedException** and crashes the app.
+
+**The Solution**
+
+\`FileProvider\` solves this by converting raw file paths into secure \`content://\` URIs.
+
+\`\`\`
+[Your App's Internal File] ──► (file:///data/user/0/cache/pic.jpg)
+                                        │
+                         [Processed by FileProvider]
+                                        │
+                                        ▼
+[Secure Content URI]         ──► (content://com.myapp.fileprovider/cache_dir/pic.jpg)
+\`\`\`
+
+Instead of opening up your storage directory, you grant temporary, fine-grained read/write access to *only* that specific file URI.
 
 Why?
 
-\`file://\` URIs to other apps cause **FileUriExposedException** on Android 7+. FileProvider grants temporary read permission via \`FLAG_GRANT_READ_URI_PERMISSION\` on the Intent.
-
-Manifest: \`<provider android:authorities="\${applicationId}.fileprovider"\` with \`paths\` XML defining cache/files dirs.
+Apps are sandboxed — without ContentProvider there is no safe cross-app data contract. \`file://\` sharing exposes paths and crashes on Android 7+. FileProvider gives temporary, scoped \`content://\` access so camera, email, and crop apps can read one file without broad storage permissions.
 
 How?
 
+**4. Implementation Steps (Mental Checklist for Coding Questions)**
+
+If the interviewer asks how to set up a \`FileProvider\`, recite these three mandatory steps:
+
+1. **Declare it in \`AndroidManifest.xml\`:** Define the \`<provider>\` tag, set \`exported\` to \`false\`, \`grantUriPermissions\` to \`true\`, and point to an XML configuration file.
+2. **Create the File Paths XML (\`res/xml/file_paths.xml\`):** Specify which internal storage directories are allowed to be mapped to URIs (e.g., \`<cache-path>\`, \`<files-path>\`).
+3. **Generate the URI in Code:** Instead of using \`Uri.fromFile()\`, use the static helper method:
+
 \`\`\`kotlin
-val uri = FileProvider.getUriForFile(context, "\${context.packageName}.fileprovider", photoFile)
+val photoUri: Uri = FileProvider.getUriForFile(
+    context,
+    "com.example.myapp.fileprovider", // Authority matching Manifest
+    myImageFile
+)
+\`\`\`
+
+**5. Pro-Tier Interview Tips (Stand Out from the Crowd)**
+
+**1. Flag Granting (Transient Permissions)**
+
+Emphasize to the interviewer that \`FileProvider\` URIs are useless without granting explicit intent permissions. When sending the intent, you must explicitly attach runtime permissions that expire automatically once the target app closes:
+
+\`\`\`kotlin
 val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-    putExtra(MediaStore.EXTRA_OUTPUT, uri)
+    putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+    // CRITICAL: Grant temporary read/write flags
+    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
 }
 \`\`\`
 
-Interview: “ContentProvider = cross-app data contract; FileProvider = secure file sharing pattern I use for camera/gallery integration.”`,
+**2. Thread Safety and Performance**
+
+Remind the interviewer that ContentProvider CRUD operations (especially \`query()\`) execute on the **Main UI Thread** by default. To prevent Application Not Responding (ANR) dialogs, you should always offload \`ContentResolver\` queries to background threads using tools like Kotlin Coroutines (\`Dispatchers.IO\`) or an \`AsyncQueryHandler\`.
+
+**3. ContentObserver**
+
+Mention that \`ContentProvider\` includes a built-in notification system. By calling \`context.contentResolver.notifyChange(uri, null)\`, apps observing that URI (via a \`ContentObserver\`) are instantly notified of data updates. This is how UI components know how to dynamically refresh when system data changes.`,
       hi: `What?
 
-ContentProvider data dusri apps ko content:// URI se deta hai. Contacts, MediaStore examples.
+**1. High-Level Elevator Pitch**
 
-FileProvider camera/gallery ke liye common — file:// share karna unsafe.
+"**ContentProvider** Android ke chaar core components mein se ek hai. Iska main kaam central data repository ko securely manage karna aur alag-alag apps ke beech safely share karna hai. **FileProvider** ContentProvider ka specialized subclass hai jo raw \`file://\` paths expose karne ki jagah secure, temporary \`content://\` URIs generate karta hai."
+
+**2. Core Concepts: ContentProvider**
+
+**Core Purpose**
+
+Android mein apps sandboxed hain — App A directly App B ka internal database/files nahi padh sakti. \`ContentProvider\` data layer aur bahar ki duniya ke beech secure, standardized interface hai.
+
+- **Abstraction:** Underlying storage (SQLite, Room, files, network) client ko matter nahi karta.
+- **IPC:** Process boundaries par CRUD (\`insert()\`, \`query()\`, \`update()\`, \`delete()\`) se safe data transfer.
+- **System integration:** Contacts, Calendar, MediaStore jaisi system repositories read/write.
+
+**Mechanics**
+
+Client \`ContentResolver\` se interact karta hai. Data unique **Content URI** se address hota hai:
+
+\`content://com.example.app.provider/users/5\`
+
+- **\`content://\`**: Scheme
+- **Authority**: OS ko sahi provider dhundhne ke liye unique string
+- **Path/ID**: Table aur row
+
+**3. Deep Dive: FileProvider**
+
+**Problem**
+
+Pehle file dusri app ko \`file:///storage/emulated/0/DCIM/photo.jpg\` se pass hoti thi:
+
+1. **Security Risk:** Receiver ko broad storage permissions chahiye.
+2. **Scoped Storage Crash:** Android 7+ par \`file://\` cross-app boundary par **FileUriExposedException** crash.
+
+**Solution**
+
+\`FileProvider\` raw path ko secure \`content://\` URI mein convert karta hai — sirf us specific file par temporary read/write access.
 
 Why?
 
-Android 7+ par file:// expose crash. FileProvider temporary permission deta hai.
-
-Manifest provider + paths XML. getUriForFile se URI banao.
+Sandboxing ke bina safe cross-app data share nahi. \`file://\` unsafe aur crash karta hai. FileProvider camera/email/crop apps ko ek file access deta hai bina poori storage khole.
 
 How?
 
-Interview: cross-app share = ContentProvider; apni app files camera ko dena = FileProvider pattern.`
+**4. Implementation Steps**
+
+1. **Manifest:** \`<provider>\` — \`exported="false"\`, \`grantUriPermissions="true"\`, paths XML reference.
+2. **\`res/xml/file_paths.xml\`:** \`<cache-path>\`, \`<files-path>\` define karo.
+3. **Code:** \`Uri.fromFile()\` mat — \`FileProvider.getUriForFile()\` use karo.
+
+\`\`\`kotlin
+val photoUri: Uri = FileProvider.getUriForFile(
+    context,
+    "com.example.myapp.fileprovider",
+    myImageFile
+)
+\`\`\`
+
+**5. Pro-Tier Interview Tips**
+
+**1. Flag Granting** — URI ke saath intent par temporary permissions zaroori:
+
+\`\`\`kotlin
+val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+    putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+}
+\`\`\`
+
+**2. Thread Safety** — \`ContentResolver.query()\` default main thread par; ANR avoid ke liye \`Dispatchers.IO\` ya \`AsyncQueryHandler\` use karo.
+
+**3. ContentObserver** — \`notifyChange(uri, null)\` se observers ko data update ka signal milta hai — system data change par UI refresh ke liye.`
     },
     {
       q: "Dagger Hilt — why use it?",
