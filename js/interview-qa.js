@@ -5182,26 +5182,145 @@ lifecycleOwner LiveData ke liye.`
       q: "Intent filter — implicit vs explicit intent and OS resolution",
       en: `What?
 
-Explicit intent: you set component class — used for in-app navigation. Implicit intent: action + category + data URI — OS resolves apps with matching intent-filter in manifest.
+**1. High-Level Elevator Pitch**
+
+"An Intent is an asynchronous messaging object used to request an action from another app component. Explicit intents target a specific class within your control, while implicit intents declare a task that relies on the system to resolve using Intent Filters declared by recipient apps."
+
+**2. Core Comparison: Explicit vs. Implicit Intents**
+
+| Feature | Explicit Intent | Implicit Intent |
+|---------|-----------------|-----------------|
+| Targeting | Mentions the exact target component class name or package. | Only specifies the action and data type; target is unknown. |
+| Primary Use Case | Internal app navigation (e.g., jumping from LoginActivity to HomeActivity). | Inter-app communication (e.g., asking the system to open a map or capture a photo). |
+| Security | High. Safe from hijacking because the target is hardcoded. | Riskier. Malicious apps can intercept data if intent filters are loosely defined. |
+| OS Overhead | Minimal. The system directly instantiates the requested target. | High. The OS must run an intent resolution algorithm across all installed apps. |
+
+**3. The Role of the Intent Filter**
+
+An Intent Filter is an entry in the AndroidManifest.xml that acts as a gatekeeper for implicit intents. If an app component wants to serve the system's public requests, it must pass a three-pronged test defined in its filter:
+
+- **<action>**: The mandatory string name of the action (e.g., \`android.intent.action.VIEW\`).
+- **<category>**: The context of the action. **Crucial Interview Note:** Every implicit intent sent via \`startActivity()\` automatically includes \`android.intent.category.DEFAULT\`. If an intent filter doesn't include this category, it will never match an implicit intent.
+- **<data>**: The precise format of the payload, broken down into its MIME type (e.g., \`image/*\`) and URI syntax scheme (e.g., \`https://\`).
+
+**4. Deep Dive: OS Resolution Algorithm**
+
+When an app calls \`startActivity(implicitIntent)\`, the Android framework executes a precise matching routine:
+
+\`\`\`
+[Implicit Intent Sent]
+         │
+         ▼
+[OS queries PackageManager] ──(Checks all Manifest Intent Filters)
+         │
+         ├──► 1. Action Test (Does the action match exactly?)
+         ├──► 2. Category Test (Does the filter contain ALL categories in the intent?)
+         └──► 3. Data Test (Do the MIME type/URI schemes match?)
+         │
+         ▼
+[Evaluates Matches]
+         │
+         ├──► 0 Matches  ──► Throws ActivityNotFoundException (Crash)
+         ├──► 1 Match    ──► Smoothly launches that single app
+         └──► 2+ Matches ──► Displays the standard system App Chooser dialog
+\`\`\`
 
 Why?
 
-Picking image: \`Intent(ACTION_GET_CONTENT)\` + \`image/*\` — gallery apps register filters; your app does not hardcode package name.
+Implicit intents decouple your app from specific package names — e.g. picking an image with \`Intent(ACTION_GET_CONTENT)\` + \`image/*\` lets any gallery app respond. Explicit intents are safer for internal navigation and sensitive data because the target is fixed. Understanding resolution helps you avoid crashes and hijacking.
 
 How?
 
-Manifest intent-filter for deep links: VIEW action, https scheme, host. Explain: ActivityManager queries PackageManager for matching activities.`,
+**5. Pro-Tier Interview Tips (Impress the Interviewer)**
+
+Mentioning these three advanced edge cases will instantly elevate your answer from a junior level to a senior level:
+
+**1. Handling ActivityNotFoundException**
+
+Never trigger an implicit intent blindly. Tell the interviewer that you always wrap your calls or verify them before executing:
+
+\`\`\`kotlin
+// Checking if an app exists to handle the intent before firing it
+if (intent.resolveActivity(packageManager) != null) {
+    startActivity(intent)
+} else {
+    // Show a fallback UI or Toast to avoid a crash
+}
+\`\`\`
+
+**2. The Android 11+ Package Visibility Trap**
+
+Because of package visibility changes introduced in recent Android versions, \`resolveActivity()\` will return null even if a matching app exists, unless you explicitly declare a \`<queries>\` tag in your manifest specifying the intent actions you intend to query.
+
+**3. Intent Hijacking / Interception**
+
+If you transmit sensitive data via an implicit intent (like a user's location or data payload), another malicious app can craft an identical intent filter to intercept it. For security-critical workflows, explicit intents or secure custom system permissions should always be preferred.`,
       hi: `What?
 
-Explicit class set. Implicit OS choose kare filter se.
+**1. High-Level Elevator Pitch**
+
+"Intent ek asynchronous messaging object hai jo doosre app component se koi action request karne ke liye use hota hai. Explicit intent aapke control wale specific class ko target karta hai, jabki implicit intent sirf task declare karta hai aur system recipient apps ke Intent Filters se resolve karta hai."
+
+**2. Core Comparison: Explicit vs. Implicit Intents**
+
+| Feature | Explicit Intent | Implicit Intent |
+|---------|-----------------|-----------------|
+| Targeting | Exact component class name ya package batata hai. | Sirf action aur data type; target unknown. |
+| Primary Use Case | Internal app navigation (LoginActivity → HomeActivity). | Inter-app communication (map kholo, photo capture karo). |
+| Security | High. Target hardcoded — hijacking se safe. | Riskier. Loose intent filters par malicious app intercept kar sakti hai. |
+| OS Overhead | Minimal. System seedha target instantiate karta hai. | High. OS saari installed apps par resolution algorithm chalata hai. |
+
+**3. Intent Filter ka Role**
+
+Intent Filter AndroidManifest.xml mein entry hai jo implicit intents ka gatekeeper hai. Component ko system ke public requests serve karne ke liye teen tests pass karne padte hain:
+
+- **<action>**: Mandatory action string (e.g., \`android.intent.action.VIEW\`).
+- **<category>**: Action ka context. **Interview Note:** Har implicit intent jo \`startActivity()\` se bheja jata hai automatically \`android.intent.category.DEFAULT\` include karta hai. Filter mein yeh category na ho to match kabhi nahi hoga.
+- **<data>**: Payload format — MIME type (\`image/*\`) aur URI scheme (\`https://\`).
+
+**4. OS Resolution Algorithm**
+
+\`startActivity(implicitIntent)\` par framework yeh matching routine chalata hai:
+
+\`\`\`
+[Implicit Intent Sent]
+         │
+         ▼
+[OS queries PackageManager] ──(Checks all Manifest Intent Filters)
+         │
+         ├──► 1. Action Test
+         ├──► 2. Category Test (filter mein intent ki SAARI categories hon)
+         └──► 3. Data Test (MIME type / URI scheme match)
+         │
+         ▼
+[Evaluates Matches]
+         │
+         ├──► 0 Matches  ──► ActivityNotFoundException (Crash)
+         ├──► 1 Match    ──► Seedha woh app launch
+         └──► 2+ Matches ──► System App Chooser dialog
+\`\`\`
 
 Why?
 
-Gallery pick implicit intent.
+Implicit intent se aap specific package par depend nahi karte — gallery pick ke liye \`ACTION_GET_CONTENT\` + \`image/*\`. Explicit intent internal navigation aur sensitive data ke liye safe. Resolution samajhne se crash aur hijacking avoid hoti hai.
 
 How?
 
-intent-filter manifest deep link.`
+**5. Pro-Tier Interview Tips**
+
+**1. ActivityNotFoundException handle karo** — blind implicit intent mat chalao:
+
+\`\`\`kotlin
+if (intent.resolveActivity(packageManager) != null) {
+    startActivity(intent)
+} else {
+    // Fallback UI ya Toast — crash avoid
+}
+\`\`\`
+
+**2. Android 11+ Package Visibility Trap** — \`resolveActivity()\` null de sakta hai jab matching app ho, jab tak manifest mein \`<queries>\` tag na ho.
+
+**3. Intent Hijacking** — sensitive data implicit intent se bhejoge to malicious app same filter se intercept kar sakti hai. Security-critical flows mein explicit intent ya secure permissions prefer karo.`
     },
     {
       q: "WorkManager vs JobScheduler",
